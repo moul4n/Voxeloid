@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Voxeloid Game Design</title>
+<style>:root{color-scheme:light dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head><body>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#f3f4f8; --paper:#ffffff; --ink:#151a26; --ink-2:#4a5266; --ink-3:#8a91a3;
+    --line:#dcdfe8; --line-2:#c6cad6;
+    --accent:#1f4fd8; --accent-ink:#ffffff; --accent-soft:#e6ecfc;
+    --warm:#d6791a; --warm-soft:#fbeedc;
+    --ok:#1c8a5a; --ok-soft:#e1f3ea; --code-bg:#eef0f6;
+    --shadow:0 1px 0 rgba(21,26,38,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#111420; --paper:#181c2a; --ink:#e9ebf3; --ink-2:#b1b7c8; --ink-3:#767d92;
+      --line:#272c3d; --line-2:#353b50;
+      --accent:#6f95ff; --accent-ink:#0d1220; --accent-soft:#1c2748;
+      --warm:#f0a04b; --warm-soft:#3a2a15;
+      --ok:#4fc58d; --ok-soft:#173327; --code-bg:#12151f;
+      --shadow:none;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#111420; --paper:#181c2a; --ink:#e9ebf3; --ink-2:#b1b7c8; --ink-3:#767d92;
+    --line:#272c3d; --line-2:#353b50;
+    --accent:#6f95ff; --accent-ink:#0d1220; --accent-soft:#1c2748;
+    --warm:#f0a04b; --warm-soft:#3a2a15;
+    --ok:#4fc58d; --ok-soft:#173327; --code-bg:#12151f;
+    --shadow:none;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.62;padding-inline:16px;padding-block:0 64px;}
+  a{color:var(--accent)}
+  h1,h2,h3{font-family:"Chakra Petch","IBM Plex Sans",system-ui,sans-serif;text-wrap:balance;line-height:1.15;margin:0}
+  h1{font-size:clamp(34px,6vw,58px);font-weight:700;letter-spacing:-.01em}
+  h2{font-size:26px;font-weight:600;margin-block:0 14px}
+  h3{font-size:17px;font-weight:600;margin-block:24px 8px}
+  p{margin:0 0 14px}
+  code{font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.9em;background:var(--code-bg);padding:1px 5px;border-radius:3px}
+  .wrap{max-width:1080px;margin:0 auto}
+  header{padding-block:40px 24px;border-bottom:1px solid var(--line-2);display:grid;grid-template-columns:1fr auto;gap:28px;align-items:end}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
+  .lede{font-size:18px;color:var(--ink-2);max-width:60ch;margin-top:14px}
+  #cut{width:200px;height:200px;max-width:100%}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 20px;font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink-3);padding-block:14px;border-bottom:1px solid var(--line)}
+  .meta b{color:var(--ink);font-weight:500}
+  .layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px;margin-top:32px}
+  nav{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);align-self:start;font-size:13.5px}
+  nav .eyebrow{margin-bottom:8px}
+  nav a{display:block;color:var(--ink-2);text-decoration:none;padding:5px 0 5px 12px;border-left:2px solid var(--line)}
+  nav a:hover,nav a:focus-visible{color:var(--ink);border-left-color:var(--accent);outline:none}
+  main{min-width:0}
+  section{padding-block:12px 36px;border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:0}
+  section > p, section > ul, section > ol, section h3{max-width:68ch}
+  ul,ol{padding-left:20px;margin:0 0 14px}
+  li{margin-bottom:7px}
+  .sec-eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+  table{border-collapse:collapse;width:100%;font-size:14.5px;margin-block:8px 18px}
+  .tbl{overflow-x:auto}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:500;border-bottom:1px solid var(--line-2)}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",monospace;font-size:13.5px;white-space:nowrap}
+  td.m{font-family:"IBM Plex Mono",monospace;font-size:13px}
+  .callout{background:var(--paper);border-left:3px solid var(--accent);padding:14px 18px;margin-block:12px 18px;box-shadow:var(--shadow);max-width:72ch}
+  .callout.warm{border-left-color:var(--warm)} .callout.ok{border-left-color:var(--ok)}
+  .callout p:last-child{margin-bottom:0}
+  .acts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-block:10px 18px}
+  .act{background:var(--paper);padding:16px 18px}
+  .act .n{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+  .act h3{margin-top:0;font-size:16px}
+  .act p{margin:0;font-size:14.5px;color:var(--ink-2)}
+  .act.now{border-top:2px solid var(--warm)}
+  .q{display:grid;grid-template-columns:28px 1fr;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);max-width:72ch}
+  .q:last-child{border-bottom:0}
+  .q .num{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:20px;color:var(--warm);line-height:1.2}
+  .q p{margin:0;font-size:15px}
+  .q p + p{margin-top:6px;color:var(--ink-2);font-size:14.5px}
+  @media (max-width:780px){
+    header{grid-template-columns:1fr}
+    #cut{display:none}
+    .layout{grid-template-columns:1fr;gap:24px}
+    nav{position:static;display:flex;flex-wrap:wrap;gap:4px 14px}
+    nav .eyebrow{width:100%}
+    nav a{border-left:0;padding:4px 0}
+  }
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Working title · game design · all names placeholder</div>
+      <h1>Voxeloid</h1>
+      <p class="lede">A small machine is left in empty space with one job and no explanation. It pulls matter out of a gift it doesn't understand, and builds a star. Then it builds worlds. A short game you can put down, about 8 to 12 hours, in the shape of the one it's aiming at.</p>
+    </div>
+    <canvas id="cut" width="400" height="400" aria-hidden="true"></canvas>
+  </header>
+  <div class="meta">
+    <span>View <b>cross-section, centred on you</b></span>
+    <span>Length <b>8–12 h total, saves anywhere</b></span>
+    <span>Reference <b>The Gnorp Apologue</b></span>
+    <span>Status <b>design settled, first numbers checked</b></span>
+  </div>
+
+  <div class="layout">
+    <nav aria-label="Sections">
+      <div class="eyebrow">Contents</div>
+      <a href="#pitch">The pitch</a>
+      <a href="#acts">The three acts</a>
+      <a href="#loop">Eat it or seal it</a>
+      <a href="#layers">Layers and merging</a>
+      <a href="#cost">The cost curve</a>
+      <a href="#heat">Heat</a>
+      <a href="#elements">Elements</a>
+      <a href="#matter">Where matter comes from</a>
+      <a href="#scale">Scale and the camera</a>
+      <a href="#carry">What carries</a>
+      <a href="#leaving">Leaving and the ending</a>
+      <a href="#problems">Problems to solve</a>
+      <a href="#tech">What this changes in the build</a>
+    </nav>
+
+    <main>
+      <section id="pitch">
+        <div class="sec-eyebrow">The pitch</div>
+        <h2>You are a small machine with a job nobody explained</h2>
+        <p>Something enormous made you, put you in empty space, and left. Beside you floats a dense point of matter — a gift, or a tool, you can't tell. Strike it and it gives up material. The material sprays outward, falls back, and settles into rings around you.</p>
+        <p>You sit at the centre of everything you build, from the first second to the last. You never leave that spot until the work is done.</p>
+        <p>You are not told that you are building a star. You work it out when it lights.</p>
+        <div class="callout">
+          <p><strong>The tone.</strong> Not lonely, not grim. A cheerful little robot running a construction project the size of a world, entirely content, with no idea it is doing something enormous. The scale is the drama; the machine is unbothered.</p>
+        </div>
+      </section>
+
+      <section id="acts">
+        <div class="sec-eyebrow">Structure</div>
+        <h2>Three acts</h2>
+        <div class="acts">
+          <div class="act now"><div class="n">Act one</div><h3>The star</h3><p>Simple material only. Every layer you add squeezes the core harder and the heat climbs. You are trying to build something and you don't know what. Then it ignites, and that's the end of act one. Roughly 45–60 minutes, once.</p></div>
+          <div class="act"><div class="n">Act two</div><h3>The worlds</h3><p>You build in the wreckage of your own star, which now hangs in the background as the light for everything that follows. One planet at a time, each a run of 45–90 minutes. This is the bulk of the game.</p></div>
+          <div class="act"><div class="n">Act three</div><h3>Life</h3><p>The last world of the last tier. Get the mix, the temperature and the surface right and something arriving from outside can take hold. Then you leave.</p></div>
+        </div>
+        <p>Act one happens once. It is deliberately short relative to the whole game — long enough that igniting it is a real achievement, short enough that the variety of act two arrives before anyone gets bored of hydrogen.</p>
+      </section>
+
+      <section id="loop">
+        <div class="sec-eyebrow">Second to second</div>
+        <h2>Eat it or seal it</h2>
+        <p>This is the game. Everything else is decoration on it.</p>
+        <p>The top layer — the one still forming — is loose. It is the only material you can consume. Eating it powers you, refines it, and turns it into the denser stuff the next layer needs. But a layer can only be compacted while it is intact enough, and once compacted it is sealed. You can never take from it again.</p>
+        <p>So every layer is one question asked over and over: <strong>how much do I take before I close it?</strong></p>
+        <p>Compaction is the goalpost. Your upgrades move the goalpost closer, because a better machine can supply more material faster. That means progress feels like the finish line coming towards you rather than you crawling towards it, which is a better feeling and it's the one Gnorp gets right.</p>
+        <div class="callout warm">
+          <p><strong>The trap to avoid.</strong> If refusing to eat is ever the best strategy, the whole loop collapses into waiting. The fix is that consumption <em>is</em> the refinery: raw material goes in, denser material comes out, and the next layer cannot be built without it. You are not burning your progress, you are processing it. Skipping the step is not an option, only the ratio is.</p>
+        </div>
+      </section>
+
+      <section id="layers">
+        <div class="sec-eyebrow">Structure</div>
+        <h2>Layers stack, sink, and merge</h2>
+        <p>A layer can be built from anything you've already unlocked, and new recipes always want a mix — some of the old material, some of the newest. Nothing you learn ever goes dead.</p>
+        <p>New layers arrive at the top, and because you're working with refined material by then they arrive thin. Once buried, they compress under the weight of everything above and get thinner still. And once they're thin enough, the second layer up from the core merges into the first. Then the new second layer gets the same treatment, and so on, forever.</p>
+        <p>So the number of visible bands never runs away. At any point in a run you're looking at four or five thin, distinct, recent layers near the surface, and three or four thick consolidated ones down by the core — with you at the very centre of them.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Where</th><th>What it looks like</th><th>What it is</th></tr></thead>
+          <tbody>
+            <tr><td class="m">Surface</td><td>The loose one, still forming</td><td>The only layer you can consume from</td></tr>
+            <tr><td class="m">Upper</td><td>4–5 thin, clearly separate bands</td><td>Recent work, each still its own material</td></tr>
+            <tr><td class="m">Deep</td><td>3–4 thick bands</td><td>Dozens of old layers consolidated; individual history gone</td></tr>
+            <tr><td class="m">Core</td><td>A hot centre, and you in it</td><td>Where the pressure is</td></tr>
+          </tbody>
+        </table></div>
+        <p>This rule earns its place four times over. The planet stays readable forever, which was the thing I was most worried about — you never end up with thirty near-identical stripes. It's bounded to draw, because the number of baked rings is fixed rather than growing with every layer. The planet approaches a size instead of running away from the camera. And it's what actually happens: sediment compacts, deep rock loses its distinctions, and a real planet's interior is a handful of zones, not hundreds of strata.</p>
+
+        <h3>The merge is the forge</h3>
+        <p>Merging is compression, and compression is heat. So the merge shouldn't be housekeeping — it should be the moment the interesting things happen.</p>
+        <p>That gives the element tree somewhere to live. You don't decide to make a heavier element; you make it when layers merge under pressure deep down. In act one, each merge drives the core heat up another step towards ignition. In act two, each merge is your chance to climb the tree, and what comes out depends on what went in.</p>
+
+        <h3>Three rhythms</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Rhythm</th><th>Every</th><th>What happens</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Strike and catch</strong></td><td class="m">seconds</td><td>Material comes in; you eat it or you let it fall</td></tr>
+            <tr><td><strong>Seal a layer</strong></td><td class="m">minutes</td><td>The surface compacts and locks; a new one starts forming</td></tr>
+            <tr><td><strong>Deep merge</strong></td><td class="m">every N layers</td><td>The bands consolidate, the core heat jumps, new material is forged</td></tr>
+          </tbody>
+        </table></div>
+        <p>Three speeds is about right. One is the thing your hands do, one is the thing you plan around, and one is the thing you look forward to.</p>
+      </section>
+
+      <section id="cost">
+        <div class="sec-eyebrow">The economy</div>
+        <h2>Critical mass, and what it costs</h2>
+        <p>A band doesn't seal when you decide it should. It seals when it reaches a critical mass, and that threshold climbs with every layer you've laid — it keeps climbing straight through merges, so layer 40 is enormously more demanding than layer 1 no matter how much consolidating has happened beneath it.</p>
+        <p>Working against that, elements are mass-based. A denser material puts more mass into the band per piece that lands. So the heavier things you learn to make don't just unlock recipes, they make the same threshold cheaper to hit — which is why arriving at a new world already knowing dense elements makes its early layers trivial, and why the deep layers still bite.</p>
+        <p>That gives the game its one real economic question, asked every second: <strong>do you let material settle towards the threshold, or eat it to gather faster?</strong> Time is the thing you're actually spending.</p>
+
+        <h3>Why the curve tried to run backwards, and what fixes it</h3>
+        <p>The first time I modelled this, layers got <em>faster</em> as the world grew — the opposite of the intent. The cause was in the model, not the design: I let the machine buy unlimited upgrades. Upgrades are paid for with eaten material, eaten material scales with density, and density was doubling every five layers, so the upgrade treadmill accelerated faster than the threshold climbed. Power outran cost and the world turned into a victory lap.</p>
+        <div class="callout ok">
+          <p><strong>The fix is a rule we already have.</strong> Buildings don't travel, and a world only has so much room to build on. Cap the building tree at around twenty and the machine's gathering rate plateaus partway through a world while the threshold keeps climbing regardless. Every layer after that point is genuinely harder than the one before, and the last one is a long push. Nothing new had to be invented; the finite building tree was already the design.</p>
+        </div>
+
+        <h3>Settings that give the intended shape</h3>
+        <p>Threshold <code>×1.32</code> per layer, a denser element tier every five layers worth <code>×2</code>, twenty buildings available on a world, forty layers.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Tier</th><th>Layers</th><th class="n">Seconds per layer</th><th class="n">Time in tier</th></tr></thead>
+          <tbody>
+            <tr><td class="m">0</td><td class="m">1–5</td><td class="n">13 · 17 · 22 · 29 · 38</td><td class="n">2.0 min</td></tr>
+            <tr><td class="m">1</td><td class="m">6–10</td><td class="n">26 · 32 · 39 · 52 · 61</td><td class="n">3.5 min</td></tr>
+            <tr><td class="m">2</td><td class="m">11–15</td><td class="n">39 · 48 · 56 · 67 · 79</td><td class="n">4.8 min</td></tr>
+            <tr><td class="m">3</td><td class="m">16–20</td><td class="n">47 · 53 · 61 · 70 · 78</td><td class="n">5.2 min</td></tr>
+            <tr><td class="m">4</td><td class="m">21–25</td><td class="n">44 · 50 · 56 · 63 · 69</td><td class="n">4.7 min</td></tr>
+            <tr><td class="m">5</td><td class="m">26–30</td><td class="n">42 · 56 · 73 · 97 · 128</td><td class="n">6.6 min</td></tr>
+            <tr><td class="m">6</td><td class="m">31–35</td><td class="n">84 · 111 · 147 · 193 · 255</td><td class="n">13.2 min</td></tr>
+            <tr><td class="m">7</td><td class="m">36–40</td><td class="n">169 · 222 · 293 · 387 · 511</td><td class="n">26.4 min</td></tr>
+          </tbody>
+        </table></div>
+        <p>A world runs about 66 minutes of pure gathering, which sits inside the 45–90 target with room for everything else that takes time. Layer 1 is thirteen seconds. Layer 40 is eight and a half minutes — thirty-nine times the first, and a proper push. The last quarter of a world accounts for forty per cent of its length.</p>
+
+        <h3>It climbs, but not in a straight line</h3>
+        <p>Time per layer rises on 32 of the 39 steps. The seven exceptions are the element tiers: layers 16–20 run 47, 53, 61, 70, 78 seconds and then layer 21 drops back to 44 because a denser material has become available. So the trend is upward and relentless, punctuated by seven moments where the grind visibly eases and then starts climbing again.</p>
+        <p>That sawtooth is worth protecting. A curve that only rises is a slog; the relief is what makes unlocking an element feel like something rather than reading a number. It's also the one concrete piece of advice from the incremental-design literature that everyone repeats — make it bumpy, with deliberate fast and slow stretches, rather than one smooth ramp.</p>
+
+        <h3>The eat/seal choice survives</h3>
+        <p>Never eating takes 404 minutes against the best play's 66 — six times worse. Eating 70% takes 150 minutes. The good band sits around 10–30%, which is narrower than it was before the fix and worth watching: if optimal play means eating only a fifth of what lands, eating risks feeling like a side activity rather than the core decision.</p>
+        <p>The fix for that, if it turns out to matter, is to make the threshold demand more than raw mass. A layer needs a certain <em>density</em>, and density only comes from refining, and refining only comes from eating. Then there's a floor under how much you must consume, the ratio question gets sharper, and it matches the fiction better — you are not just piling material up, you are processing it into something a deeper layer can be made of.</p>
+
+        <h3>Tuning knobs</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Knob</th><th>What it controls</th><th class="n">Value</th></tr></thead>
+          <tbody>
+            <tr><td class="m">threshold growth</td><td>The whole shape. Below about 1.28 the curve flattens; above 1.35 the tail becomes punishing.</td><td class="n">1.32</td></tr>
+            <tr><td class="m">buildings per world</td><td>Where the machine's power plateaus. Fewer buildings means an earlier plateau and a steeper back half.</td><td class="n">20</td></tr>
+            <tr><td class="m">density step</td><td>How much relief a new element gives. Too high and it outruns the threshold again.</td><td class="n">×2</td></tr>
+            <tr><td class="m">tier spacing</td><td>How often relief arrives, so how pronounced the sawtooth is.</td><td class="n">every 5 layers</td></tr>
+            <tr><td class="m">layer count</td><td>The main lever for making later worlds longer rather than merely faster.</td><td class="n">40, rising per world</td></tr>
+          </tbody>
+        </table></div>
+        <div class="callout warm">
+          <p><strong>Still the thing most likely to go wrong.</strong> Arriving at a world three element tiers ahead of where you started makes its opening trivial. That's the reward and it should feel like one, but later worlds have to get harder at roughly the rate your knowledge grows — more layers, a steeper threshold, or elements that simply aren't in the local debris — or the back half of the game evaporates.</p>
+        </div>
+      </section>
+
+      <section id="heat">
+        <div class="sec-eyebrow">The stat that flips</div>
+        <h2>Heat is the goal, then the hazard</h2>
+        <p>Mass presses inward. Pressure makes heat. That single chain drives both acts, but it means opposite things in each.</p>
+        <p><strong>In act one, heat is what you want.</strong> Every layer raises it. You're climbing towards a threshold you can see coming but can't name, and when you cross it the whole thing ignites. That moment is act one's payoff and it should be the loudest thing in the game.</p>
+        <p><strong>In act two, heat is what you manage.</strong> A planet's core gets hot, but it must not run away. Layers built from unstable material soften, slump or refuse to seal when the core underneath them is too hot. The more advanced an element, the hotter it stays solid.</p>
+        <p>So the element tree is also a heat-tolerance tree, and "can I build deeper" and "can I build hotter" are the same question. That gives act two its own pressure without inventing an enemy.</p>
+        <p>Heat has to be visible or none of this lands. The core in the cross-section should glow, and its colour is the gauge.</p>
+      </section>
+
+      <section id="elements">
+        <div class="sec-eyebrow">Progression</div>
+        <h2>You can only build with what you've made</h2>
+        <p>Making a heavier element needs heat and pressure. Heat and pressure need mass. Mass comes from building. So the tree climbs itself, and it climbs the real one: light and simple at the bottom, heavy and strange at the top.</p>
+        <p>Everything you learn to make, you keep forever. That is the permanent progression and it is the only permanent progression — no stat carries over, only knowledge.</p>
+        <div class="callout ok">
+          <p><strong>The clever part, and it was your idea.</strong> Knowing how to make something is not the same as having it. Each world starts with only what is locally available in its debris, so you can arrive at a planet knowing iron perfectly well and still have to work your way up to it from scratch with what's on hand. That single rule is the difficulty dial, the variety engine, and the reason a world you've unlocked can still be a hard one.</p>
+        </div>
+        <p>Practically: the world select screen shows what's available in that debris field, and that tells you how hard it will be and what kind of build it wants. Distance from the star doesn't matter. What's lying around does.</p>
+      </section>
+
+      <section id="matter">
+        <div class="sec-eyebrow">Inputs</div>
+        <h2>Three ways matter arrives</h2>
+        <p>Each answers a different question, which is why having all three works.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Source</th><th>How it behaves</th><th>The question it answers</th></tr></thead>
+          <tbody>
+            <tr><td><strong>The singularity</strong></td><td>Infinite. Strike it and it gives. Clicking speeds it up; upgrades gradually take the clicking over so it becomes a choice rather than a chore. Simple material only.</td><td>Am I doing something right now?</td></tr>
+            <tr><td><strong>Drifting dust</strong></td><td>Passive, and scales with your mass — a heavier body has a bigger catch area, which is real physics and means growth compounds without an invented multiplier. Some sails past and is gone, visibly. Surface arms grab more.</td><td>Am I big enough yet?</td></tr>
+            <tr><td><strong>Asteroids</strong></td><td>Drift through the background and foreground from the very beginning as scenery you can't touch. Much later, drones go and fetch them, or chase down dust that was about to escape. They carry material you can't make yet.</td><td>Did I prepare for this?</td></tr>
+          </tbody>
+        </table></div>
+        <p>One rule for asteroids: they should only start appearing as catchable once they're relevant. Rare and useless is noise. Rare and exactly what you needed is a moment.</p>
+        <div class="callout">
+          <p><strong>The singularity sits in the foreground.</strong> It floats beside you, drawn in front of everything, perfectly still while the rest of the screen swirls. Falling material passes behind it. Gravity ignores it. Nothing ever explains why, and nothing should — it's the one visible reminder that something out there is running on rules you don't have access to.</p>
+          <p>It also does a quiet practical job. Because it isn't part of the world's physics, it never gets buried. However enormous the planet gets, your main way of getting material is still right there in front of you. Without that, the late game entombs you in your own work with no way to feed yourself.</p>
+        </div>
+      </section>
+
+      <section id="scale">
+        <div class="sec-eyebrow">Camera and feel</div>
+        <h2>Scale is the thing people will remember</h2>
+        <p>You stay small. The work gets enormous. Every layer pulls the camera back a little, and by the end of a world you are a speck at the centre of something vast that you personally assembled.</p>
+        <p>Your machine does grow, but never much larger than the planet's inner core. That means body upgrades can't just make you bigger — they add arms, attachments and detail. Which is the better outcome anyway, because intricate beats large in voxel art, and more parts is exactly what our art pipeline is cheapest at.</p>
+        <p>Once your star is lit it becomes the background for every world after: compacted to a simple shape, sitting behind and off to one side, lighting everything. It's the one thing you made that you can always see, and it never stops being visible for the rest of the game.</p>
+        <div class="callout warm">
+          <p><strong>Implementation note.</strong> If the camera keeps zooming out and the machine is drawn at world scale, it eventually becomes a single pixel. The machine should be drawn at a roughly fixed size on screen while the world scales around it, or given a floor below which it stops shrinking. Worth deciding before the camera work starts, not after.</p>
+        </div>
+      </section>
+
+      <section id="carry">
+        <div class="sec-eyebrow">Between worlds</div>
+        <h2>Three things, and only two of them travel</h2>
+        <p>Everything you can own falls into one of three buckets, and the split is what stops the tenth world being a formality.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>What</th><th>Travels?</th><th>How strong</th><th>What it's for</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Elements you've learned to make</strong></td><td>Yes</td><td>Foundational</td><td>Widens what you can attempt anywhere. The permanent spine.</td></tr>
+            <tr><td><strong>Body upgrades and blueprints</strong></td><td>Yes</td><td>Modest</td><td>Defines how you play. You keep them all but can only fit so many at once, so each world is a re-plan.</td></tr>
+            <tr><td><strong>Buildings and world upgrades</strong></td><td><strong>No</strong></td><td>Enormous</td><td>Where the big numbers and the silly combinations live. Rebuilt from nothing every time.</td></tr>
+          </tbody>
+        </table></div>
+        <p>The rule that follows, and it's a good one: <strong>anything too powerful to hand the machine permanently should be a building instead.</strong> If an upgrade would trivialise every world that comes after it, it doesn't belong on your body — it belongs welded to a world you are going to leave.</p>
+        <p>This is also where the compounding buff system belongs. The stacking rules we worked out — tags, the layers of modifiers, effects that blend into each other rather than overwrite — should mostly attach to buildings, not to the machine. That way the absurd combinations are real and earned and then gone, and the next world starts clean instead of starting solved.</p>
+        <p>There's a quiet bit of feeling in it too. Everything you actually built stays behind. You leave with nothing but what you learned and what you are.</p>
+      </section>
+
+      <section id="leaving">
+        <div class="sec-eyebrow">The end of a world, and the end</div>
+        <h2>You teleport out. You don't know how</h2>
+        <p>When the work is finished you leave. The method is not explained to you or to the player — it's simply in your programming, along with the certainty that you're done.</p>
+        <p>Mechanically that needs a signal, or players will sit there unsure. The cleanest version: the game tells you plainly that the world is complete, and then you may leave whenever you like. Stay longer and you get more, with returns that fall off. That keeps the moment clean while still making the last few minutes a decision.</p>
+        <p>The ending is life. The last world of the last tier, with the right materials at the right depth and the right temperature, catches something that arrives from outside. It takes. Then you go, and you will never see what happens next.</p>
+        <p>Helping that civilisation, and spreading it to the other worlds you made, is a 2.0 idea. It is not designed here and shouldn't be until the game exists.</p>
+      </section>
+
+      <section id="problems">
+        <div class="sec-eyebrow">Open</div>
+        <h2>Problems this design creates, and what I'd do about them</h2>
+        <div class="q"><span class="num">1</span><div>
+          <p>Is there a strategy where you simply never consume?</p>
+          <p>The refinery framing should prevent it, but this is exactly the kind of thing the simulator is for. Model the eat/seal ratio as a decision and check whether one setting dominates. If it does, the fix is in the recipe costs, not in a rule forbidding it.</p>
+        </div></div>
+        <div class="q"><span class="num">2</span><div>
+          <p>Watching material accrete is restful, not engaging.</p>
+          <p>Striking the singularity, aiming the arms and catching asteroids need real timing and skill in them, or this is a screensaver with numbers. Gnorp gets away with less because it is openly an idle game. If we want sessions that feel sharp, hands need something to do.</p>
+        </div></div>
+        <div class="q"><span class="num">3</span><div>
+          <p>How long is act one, really?</p>
+          <p>45 to 60 minutes is a guess. Too short and igniting a star feels cheap; too long and the game's variety arrives late. This is the first thing to test with real numbers, because everything downstream is paced against it.</p>
+        </div></div>
+        <div class="q"><span class="num">4</span><div>
+          <p>What does "tier" mean for worlds?</p>
+          <p>I've assumed worlds are grouped into difficulty tiers by what their debris offers, with life as the target of the final world of the final tier. If you meant something else by "level", this is the bit to correct.</p>
+        </div></div>
+        <div class="q"><span class="num">5</span><div>
+          <p>Does a merge cost you anything?</p>
+          <p>If merged bands simply keep producing, the merge is free reward and there's no decision in it. It probably wants a small price — say a consolidated band produces at the combined rate but loses whatever special property its individual layers had. Then holding off has a point, and pushing for the merge has a point, and the player has to choose.</p>
+        </div></div>
+        <div class="q"><span class="num">6</span><div>
+          <p>Is eating central enough?</p>
+          <p>At the corrected settings, best play eats only 10–30% of what lands. That's a real decision but it may not feel like the core of the game. If it doesn't, make the threshold require density rather than mass alone, so a layer literally cannot be sealed without refined material and eating becomes compulsory rather than merely wise.</p>
+        </div></div>
+      </section>
+
+      <section id="tech">
+        <div class="sec-eyebrow">Consequences</div>
+        <h2>What this changes in what we've already built</h2>
+        <p>Most of the phase 0 work survives, which is the good news. The changes are small and worth writing into the bench now rather than discovering later.</p>
+        <ul>
+          <li><strong>Gravity points inward, not down.</strong> In the swarm shader that's a change of a couple of lines — acceleration towards a centre point instead of a constant downward vector.</li>
+          <li><strong>The camera zooms out over a run, but not forever.</strong> Merging keeps the radius bounded, so there is a real maximum zoom to design against rather than an open-ended one.</li>
+          <li><strong>Zoom itself needs benchmarking.</strong> The current bench has a fixed camera. Worth adding a zoom to the stress test, because rendering thousands of tiny objects at a range of zoom levels is not the same problem as rendering them at one.</li>
+          <li><strong>Matter flows both ways.</strong> In from the edges as accretion, out from the centre as refined material being emitted. Two flows in the same system, which the existing spawner handles fine but the scenarios don't currently model.</li>
+          <li><strong>Settled layers are baked and free, and there is a fixed number of them.</strong> Once a ring is sealed it stops moving and can be drawn as a static image. Because deep bands merge, that number never grows past eight or nine however long a world runs — so the static side of the scene has a hard ceiling on cost, not a creeping one. Loose matter costs everything, settled matter costs nothing, and the frame budget becomes "how much is still in the air", which is exactly what the bench already measures.</li>
+          <li><strong>The hardest frame is in the middle, not at the end.</strong> Late layers are thin and the deep ones have merged away, so the peak cost sits somewhere around the middle of a world. Worth knowing before we tune the stress scenarios, because the current "late" scenario assumes the worst case is the last one.</li>
+          <li><strong>The machine is drawn at a fixed screen size.</strong> Its voxel parts stay crisp no matter how far out the camera goes.</li>
+          <li><strong>Material types are the tags.</strong> The tag system from the stacking document does triple duty here: it decides which modules work with what, what a layer is made of, and whether life can start. The blending rules apply unchanged — two materials in a layer make a third thing rather than one replacing the other.</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+(function(){
+  var c=document.getElementById('cut'); if(!c) return;
+  var ctx=c.getContext('2d'), W=c.width, H=c.height;
+  function tok(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    var cx=W/2, cy=H/2;
+    var accent=tok('--accent'), warm=tok('--warm'), line=tok('--line-2'), ink3=tok('--ink-3');
+    // layer radii: thick early, thin late — the thinning rule, drawn
+    // thin recent bands outside, thick consolidated bands inside — the merge rule, drawn
+    var r=[178,170,163,157,152,120,82,42];
+    var cols=[line,ink3,line,accent,ink3,accent,warm,warm];
+    for(var i=0;i<r.length;i++){
+      ctx.beginPath(); ctx.arc(cx,cy,r[i],0,Math.PI*2);
+      ctx.fillStyle=cols[i]; ctx.globalAlpha=0.15+0.055*i; ctx.fill();
+      ctx.globalAlpha=0.5; ctx.strokeStyle=cols[i]; ctx.lineWidth=1; ctx.stroke();
+    }
+    // hot core
+    ctx.globalAlpha=1;
+    var g=ctx.createRadialGradient(cx,cy,2,cx,cy,86);
+    g.addColorStop(0,warm); g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,86,0,Math.PI*2); ctx.fill();
+    // the little machine, dead centre, tiny
+    ctx.fillStyle=accent; ctx.fillRect(cx-5,cy-5,10,10);
+    ctx.fillStyle=warm; ctx.fillRect(cx-2,cy-8,4,3);
+    ctx.fillStyle=accent; ctx.fillRect(cx-9,cy-1,3,3); ctx.fillRect(cx+6,cy-1,3,3);
+    // loose matter falling in
+    ctx.fillStyle=ink3; ctx.globalAlpha=0.85;
+    var seeds=[[0.2,196],[0.9,208],[1.7,190],[2.4,214],[3.1,198],[3.9,205],[4.6,192],[5.4,210],[6.0,200]];
+    seeds.forEach(function(s){
+      var a=s[0], d=s[1];
+      for(var k=0;k<4;k++){
+        var dd=d-k*9;
+        ctx.fillRect(cx+Math.cos(a)*dd-1.5, cy+Math.sin(a)*dd-1.5, 3, 3);
+      }
+    });
+    ctx.globalAlpha=1;
+  }
+  draw();
+  if(window.matchMedia){window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);}
+  new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+})();
+</script>
+
+</body></html>

@@ -1,0 +1,120 @@
+{
+  "model_version": 1,
+  "step_seconds": 0.25,
+  "maximum_hours": 48,
+  "source": {
+    "manual_mass_per_activation": 1.0,
+    "automatic_activations_per_second": 1.0,
+    "base_capture_efficiency": 0.9
+  },
+  "ambient": {
+    "visible_flybys_per_second": 24.0,
+    "average_mass_per_flyby": 1.0,
+    "base_capture_chance": 0.0005,
+    "mass_scale": 1000.0,
+    "mass_log10_gain": 0.006,
+    "maximum_capture_chance": 0.12
+  },
+  "core": {
+    "base_level_cost": 20.0,
+    "level_cost_growth": 1.8,
+    "talents": {
+      "automatic_invocation": {
+        "name": "Automatic Invocation",
+        "branch": "Singularity Control",
+        "effects": {"automation_unlocked": 1.0}
+      },
+      "resonant_pull": {
+        "name": "Resonant Pull",
+        "branch": "Singularity Control",
+        "effects": {"pull_mass_multiplier": 1.35}
+      },
+      "rapid_recovery": {
+        "name": "Rapid Recovery",
+        "branch": "Singularity Control",
+        "effects": {"automatic_rate_multiplier": 11.0}
+      },
+      "gravity_focus": {
+        "name": "Gravity Focus",
+        "branch": "Gravitational Manipulation",
+        "effects": {"source_capture_multiplier": 1.12, "ambient_capture_multiplier": 1.25}
+      },
+      "efficient_assimilation": {
+        "name": "Efficient Assimilation",
+        "branch": "Assimilation and Internal Growth",
+        "effects": {"future_core_cost_multiplier": 0.85}
+      },
+      "echo_pull": {
+        "name": "Echo Pull",
+        "branch": "Singularity Control",
+        "effects": {"pull_mass_multiplier": 1.25}
+      },
+      "capture_radius": {
+        "name": "Capture Radius",
+        "branch": "Gravitational Manipulation",
+        "effects": {"ambient_capture_multiplier": 1.75}
+      },
+      "particle_net": {
+        "name": "Particle Net",
+        "branch": "Construction and Automation",
+        "effects": {"ambient_capture_multiplier": 1.75}
+      },
+      "compression_field": {
+        "name": "Compression Field",
+        "branch": "Gravitational Manipulation",
+        "effects": {"layer_requirement_multiplier": 0.9}
+      },
+      "compound_aperture": {
+        "name": "Compound Aperture",
+        "branch": "Singularity Control",
+        "effects": {"pull_mass_multiplier": 1.5}
+      },
+      "stable_aperture": {
+        "name": "Stable Aperture",
+        "branch": "Singularity Control",
+        "effects": {"source_capture_multiplier": 1.08}
+      },
+      "continuous_breach": {
+        "name": "Continuous Breach",
+        "branch": "Singularity Control",
+        "effects": {"automatic_rate_multiplier": 2.0}
+      }
+    }
+  },
+  "compaction": {
+    "production_multiplier": 1.45,
+    "overfill_log_bonus": 0.35
+  },
+  "campaign": [
+    {"id": "sun", "name": "Sun", "compactions": 7, "base_layer_mass": 21000.0, "layer_growth": 1.62, "legacy_multiplier": 1.2, "target_core_level": 7},
+    {"id": "rocky_seed", "name": "Rocky Seed", "compactions": 8, "base_layer_mass": 6140.0, "layer_growth": 1.58, "legacy_multiplier": 1.16, "target_core_level": 8},
+    {"id": "gas_giant", "name": "Gas Giant", "compactions": 9, "base_layer_mass": 10670.0, "layer_growth": 1.6, "legacy_multiplier": 1.18, "target_core_level": 9},
+    {"id": "ice_world", "name": "Ice World", "compactions": 8, "base_layer_mass": 15200.0, "layer_growth": 1.6, "legacy_multiplier": 1.16, "target_core_level": 10},
+    {"id": "volcanic_world", "name": "Volcanic World", "compactions": 9, "base_layer_mass": 22670.0, "layer_growth": 1.62, "legacy_multiplier": 1.18, "target_core_level": 11},
+    {"id": "earth_like", "name": "Earth-like World", "compactions": 10, "base_layer_mass": 33330.0, "layer_growth": 1.64, "legacy_multiplier": 1.0, "target_core_level": 12}
+  ],
+  "scenarios": {
+    "best": {
+      "description": "Focused active opening, immediate compaction, production-first Core build",
+      "manual_activations_per_second": 9.0,
+      "manual_input_duration_minutes": 8.0,
+      "source_yield_multiplier": 1.0,
+      "ambient_yield_multiplier": 1.0,
+      "core_allocation_fraction": 0.45,
+      "compact_overfill_ratio": 1.0,
+      "compact_reaction_seconds": 1.0,
+      "talent_order": ["automatic_invocation", "resonant_pull", "rapid_recovery", "gravity_focus", "efficient_assimilation", "echo_pull", "compression_field", "compound_aperture", "capture_radius", "particle_net", "stable_aperture", "continuous_breach"]
+    },
+    "worst": {
+      "description": "Low-input opening, delayed compaction, utility-first Core build",
+      "manual_activations_per_second": 2.0,
+      "manual_input_duration_minutes": 5.0,
+      "source_yield_multiplier": 0.8,
+      "ambient_yield_multiplier": 0.85,
+      "core_allocation_fraction": 0.5,
+      "compact_overfill_ratio": 1.25,
+      "compact_reaction_seconds": 45.0,
+      "talent_order": ["automatic_invocation", "efficient_assimilation", "rapid_recovery", "gravity_focus", "capture_radius", "particle_net", "resonant_pull", "compression_field", "stable_aperture", "echo_pull", "compound_aperture", "continuous_breach"]
+    }
+  }
+}

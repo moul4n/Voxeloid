@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stacking &amp; Scaling</title>
+<style>:root{color-scheme:light dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head><body>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#f3f4f8; --paper:#ffffff; --ink:#151a26; --ink-2:#4a5266; --ink-3:#8a91a3;
+    --line:#dcdfe8; --line-2:#c6cad6;
+    --accent:#1f4fd8; --accent-ink:#ffffff; --accent-soft:#e6ecfc;
+    --warm:#d6791a; --warm-soft:#fbeedc;
+    --ok:#1c8a5a; --ok-soft:#e1f3ea; --bad:#c23b3b; --bad-soft:#fbe4e4; --code-bg:#eef0f6;
+    --shadow:0 1px 0 rgba(21,26,38,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#111420; --paper:#181c2a; --ink:#e9ebf3; --ink-2:#b1b7c8; --ink-3:#767d92;
+      --line:#272c3d; --line-2:#353b50;
+      --accent:#6f95ff; --accent-ink:#0d1220; --accent-soft:#1c2748;
+      --warm:#f0a04b; --warm-soft:#3a2a15;
+      --ok:#4fc58d; --ok-soft:#173327; --bad:#ff7b7b; --bad-soft:#3a1a1a; --code-bg:#12151f;
+      --shadow:none;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#111420; --paper:#181c2a; --ink:#e9ebf3; --ink-2:#b1b7c8; --ink-3:#767d92;
+    --line:#272c3d; --line-2:#353b50;
+    --accent:#6f95ff; --accent-ink:#0d1220; --accent-soft:#1c2748;
+    --warm:#f0a04b; --warm-soft:#3a2a15;
+    --ok:#4fc58d; --ok-soft:#173327; --bad:#ff7b7b; --bad-soft:#3a1a1a; --code-bg:#12151f;
+    --shadow:none;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.6;padding-inline:16px;padding-block:0 64px;}
+  a{color:var(--accent)}
+  h1,h2,h3,h4{font-family:"Chakra Petch","IBM Plex Sans",system-ui,sans-serif;text-wrap:balance;line-height:1.15;margin:0}
+  h1{font-size:clamp(34px,6vw,58px);font-weight:700;letter-spacing:-.01em}
+  h2{font-size:26px;font-weight:600;margin-block:0 14px}
+  h3{font-size:17px;font-weight:600;margin-block:22px 8px}
+  p{margin:0 0 14px}
+  code{font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.9em;background:var(--code-bg);padding:1px 5px;border-radius:3px}
+  pre{font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.5;background:var(--code-bg);border:1px solid var(--line);padding:14px 16px;overflow-x:auto;margin:0 0 16px;border-radius:4px}
+  pre code{background:none;padding:0}
+  .wrap{max-width:1080px;margin:0 auto}
+  header{padding-block:40px 28px;border-bottom:1px solid var(--line-2)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
+  .lede{font-size:18px;color:var(--ink-2);max-width:62ch;margin-top:14px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 20px;font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink-3);padding-block:14px;border-bottom:1px solid var(--line)}
+  .meta b{color:var(--ink);font-weight:500}
+  .layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px;margin-top:32px}
+  nav{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);align-self:start;font-size:13.5px}
+  nav .eyebrow{margin-bottom:8px}
+  nav a{display:block;color:var(--ink-2);text-decoration:none;padding:5px 0 5px 12px;border-left:2px solid var(--line)}
+  nav a:hover,nav a:focus-visible{color:var(--ink);border-left-color:var(--accent);outline:none}
+  main{min-width:0}
+  section{padding-block:12px 36px;border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:0}
+  section > p, section > ul, section > ol, section h3{max-width:70ch}
+  ul,ol{padding-left:20px;margin:0 0 14px}
+  li{margin-bottom:6px}
+  .sec-eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+  table{border-collapse:collapse;width:100%;font-size:14.5px;margin-block:8px 18px}
+  .tbl{overflow-x:auto}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:500;border-bottom:1px solid var(--line-2)}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",monospace;font-size:13.5px;white-space:nowrap}
+  td.m{font-family:"IBM Plex Mono",monospace;font-size:13px}
+  tr.good td{background:var(--ok-soft)} tr.bad td{background:var(--bad-soft)}
+  .callout{background:var(--paper);border-left:3px solid var(--accent);padding:14px 18px;margin-block:10px 18px;box-shadow:var(--shadow);max-width:74ch}
+  .callout.warm{border-left-color:var(--warm)} .callout.ok{border-left-color:var(--ok)}
+  .callout p:last-child{margin-bottom:0}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-block:8px 18px}
+  .card{background:var(--paper);padding:14px 16px}
+  .card h3{margin-top:0;font-size:15px}
+  .card p{margin:0;font-size:14px;color:var(--ink-2)}
+  .card .src{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-3);margin-top:6px}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-block:8px 18px}
+  .tag{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:2px;background:var(--accent-soft);color:var(--accent);margin-right:4px}
+  .tag.warm{background:var(--warm-soft);color:var(--warm)}
+  .tag.bad{background:var(--bad-soft);color:var(--bad)}
+  /* idea generator */
+  .gen{background:var(--paper);border:1px solid var(--line-2);padding:18px 20px;margin-block:10px 18px;box-shadow:var(--shadow)}
+  .gen .out{font-family:"IBM Plex Sans",sans-serif;font-size:17px;line-height:1.5;min-height:3.2em;margin:10px 0 12px}
+  .gen .out b{color:var(--accent)}
+  .gen .out .k{color:var(--warm);font-weight:600}
+  .gen button{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:15px;background:var(--accent);color:var(--accent-ink);border:0;padding:9px 16px;cursor:pointer;border-radius:3px}
+  .gen button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .gen button.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent);margin-left:8px}
+  .gen .hist{font-size:14px;color:var(--ink-2);margin-top:12px;padding-left:18px}
+  .gen .hist li{margin-bottom:3px}
+  @media (max-width:780px){
+    .layout{grid-template-columns:1fr;gap:24px}
+    nav{position:static;display:flex;flex-wrap:wrap;gap:4px 14px}
+    nav .eyebrow{width:100%}
+    nav a{border-left:0;padding:4px 0}
+  }
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Vox speed game · systems research · companion to the Bible and the Phase 0 plan</div>
+    <h1>Stacking &amp; Scaling</h1>
+    <p class="lede">How the games we admire make multipliers compound without breaking, the blending rules that let stacked effects change each other instead of overwriting, a simulator that tests every route through the unlock pool, and a generator for mechanics we haven't thought of yet. Names, themes and the core verb stay unlocked.</p>
+  </header>
+  <div class="meta">
+    <span>Reference games <b>11</b></span>
+    <span>Simulator <b>buildsim.py · 27-buff sample pool</b></span>
+    <span>Status <b>research → rules, nothing locked</b></span>
+  </div>
+
+  <div class="layout">
+    <nav aria-label="Sections">
+      <div class="eyebrow">Contents</div>
+      <a href="#lessons">What the reference games do</a>
+      <a href="#layers">The blending model</a>
+      <a href="#physics">Blending into physics</a>
+      <a href="#numbers">Numbers that work</a>
+      <a href="#track">The progress track</a>
+      <a href="#sim">Testing every route</a>
+      <a href="#results">Simulator results</a>
+      <a href="#generator">Mechanic generator</a>
+      <a href="#rules">Rules to build against</a>
+      <a href="#sources">Sources</a>
+    </nav>
+
+    <main>
+      <section id="lessons">
+        <div class="sec-eyebrow">Research</div>
+        <h2>What the reference games actually do</h2>
+        <p>Every game below solves the same problem: many modifiers, one number, and the requirement that adding a modifier changes the result in a way the player can feel without the result running away. The solutions cluster into a handful of shapes.</p>
+        <div class="cards">
+          <div class="card"><h3>Path of Exile</h3><p>Three layers: flat adds sum, "increased" sums into one bucket, "more" multiplies separately. Every skill carries tags and picks up every matching modifier, so one item line works for hundreds of skills. Damage conversion is one-way (phys → lightning → cold → fire → chaos) and converted damage is scaled by <em>both</em> pools. Conversion happens once; that's the recursion guard.</p><div class="src">hit = (base + Σadd) × (1 + Σinc) × Π(1 + more)</div></div>
+          <div class="card"><h3>Balatro</h3><p>Two visible numbers, chips × mult. Jokers resolve strictly left to right, so order is a build decision. Retriggers re-run a card, turning additive stacks into exponents; the famous Baron + Mime + Blueprint setup overflows a double. Readable because each joker changes one number by one operation.</p><div class="src">score = chips × mult · order matters</div></div>
+          <div class="card"><h3>Risk of Rain 2</h3><p>Four explicit stacking curves per item: linear, hyperbolic for anything bounded (chance, reduction), exponential for the deliberately scary ones (Shaped Glass), and special. Hyperbolic exists so 100% is never reached; the cost is that hyperbolic items become dead picks past ~10 stacks.</p><div class="src">hyperbolic: a·n / (1 + a·n)</div></div>
+          <div class="card"><h3>Noita</h3><p>Modifiers are functions on a shared "shot state" struct, not on spells. Any modifier applies to any projectile. Triggers open a nested mini-wand with fresh state, giving isolation. Divide-by spells carry an iteration counter and collapse past depth 3, which is the recursion guard.</p><div class="src">modifier(state) → state · depth cap</div></div>
+          <div class="card"><h3>Nova Drift</h3><p>Mods hang off shared categories (projectile, construct, burn, velocity) and each weapon defines what a category-level effect means for it: Splinter Shot fragments Volley, cluster-bombs grenades, only-on-survive for Railgun. One mod, one hook per receiver, no pair code.</p><div class="src">mod × receiver-hook, not mod × mod</div></div>
+          <div class="card"><h3>Vampire Survivors / Brotato</h3><p>Global stat buckets that stack additively with hard caps (Might +900%, cooldown −90% floor, Amount +10). Weapons reinterpret a global stat per tag (Amount → pierce for Mace, duration for Globus). Brotato's two-layer flat × % formula is PoE's added/increased in miniature.</p><div class="src">dmg = (base + Σflat × scaling) × (1 + Σ%)</div></div>
+          <div class="card"><h3>The Gnorp Apologue</h3><p>The multiplier is a mostly additive pool driven by gnorp count (the dev tried per-purchase and per-shards-spent first and both misbehaved). A few flat 1.5–5× layers (acid, ice, ultra boost) sit on top, and bomber damage is quadratic in count. No exponential cost wall; growth is bounded by collection throughput. Rust on Tetra, not an off-the-shelf engine.</p><div class="src">additive pool × few flat × quadratic counts</div></div>
+          <div class="card"><h3>Cookie Clicker / Antimatter Dimensions</h3><p>Cost = base × 1.15ⁿ; income grows polynomially, so exponential cost always wins and prestige resets the curve. AD converts each prestige layer logarithmically (10^(log₁₀x / 308)), so a run 10³⁰⁸× better yields 10× more currency. Softcaps everywhere.</p><div class="src">cost_n = b · rⁿ, r ≈ 1.07–1.15</div></div>
+          <div class="card"><h3>Genshin reactions</h3><p>Element × element is a small matrix with three response classes (amplify ×1.5/×2, transformative flat damage that can't crit, additive). Three formula shapes cover ~15 pairings. A reaction table is how two tags blend into a third thing rather than one overwriting the other.</p><div class="src">tag pair → response class</div></div>
+        </div>
+        <div class="callout"><p><strong>The pattern.</strong> Bucket modifiers by operator, not by source. Same-bucket stacks dilute themselves; cross-bucket stacks multiply. Builds come from crossing buckets, and so does degeneracy. Then make modifiers functions over a tagged state struct so interactions cost O(tags), not O(pairs), and guard recursion with one-way chains and depth counters.</p></div>
+      </section>
+
+      <section id="layers">
+        <div class="sec-eyebrow">Model</div>
+        <h2>The blending model: five layers and a reaction table</h2>
+        <p>Our stat resolver from the Bible gets two additions from the research: a bounded layer for anything with a ceiling, and a reaction table so tag pairs produce a third behaviour instead of the later one winning.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Layer</th><th>Combines as</th><th>Use for</th><th>Feel</th></tr></thead>
+          <tbody>
+            <tr><td class="m">add</td><td>Σ flat</td><td>Base damage, projectile count, split count</td><td>Big early, fades as % layers grow</td></tr>
+            <tr><td class="m">inc</td><td>1 + Σ %</td><td>The common "+40% damage" stuff; most of the pool</td><td>Diminishing within its own bucket, so one stat can't run away</td></tr>
+            <tr><td class="m">more</td><td>Π (1 + %)</td><td>Rare, conditional, tag-gated: "30% more if fire"</td><td>Where builds actually multiply; ration it</td></tr>
+            <tr><td class="m">bounded</td><td>base + (cap − base) · a·n/(1 + a·n)</td><td>Crit chance, pierce chance, dodge, cooldown reduction, anything that must never reach 100%</td><td>Every stack is worth less; never a wall, never infinite</td></tr>
+            <tr><td class="m">convert</td><td>Move a fraction of type A into type B; converted part scaled by both pools</td><td>Letting one base number be eligible for two tag families</td><td>The bridge between archetypes; the thing that makes hybrid builds exist</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>Resolution order</h3>
+<pre><code>per damage type t in {phys, fire, ice, ...}:
+  base_t     = base + Σ add[generic ∪ t]
+  conv       = one-way chain, applied once, fractions clamp to 100%
+  value_t    = base_t × (1 + Σ inc[generic] + Σ inc[t]) × Π more[generic] × Π more[t]
+  converted  = moved × (1 + Σ inc[generic] + Σ inc[from] + Σ inc[to]) × Π more[generic, from, to]
+hit          = Σ value_t + converted
+hit         *= (1 + crit × (critmult − 1))           # bounded stat, resolved hyperbolically
+events       = on_hit / on_kill / on_split → spawn(tags ∪ child_tags), depth += 1, budget −= n</code></pre>
+        <p>Every tag-gated modifier tests <code>req ⊆ entity.tags</code>, and a spawned child inherits the parent's tags plus whatever the trigger adds. That inheritance is how a "fire projectiles pierce" buff reaches shards spawned by a crit that came from a fire bolt, without anyone writing the fire→crit→shard case.</p>
+
+        <h3>The reaction table</h3>
+        <p>Where two tags meet on the same entity, a small table says what the pair <em>means</em>. Three response classes cover everything, and adding a tag means adding one row, not N pair rules.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Pair</th><th>Class</th><th>Result</th></tr></thead>
+          <tbody>
+            <tr><td class="m">fire + shard</td><td>amplify</td><td>Shards keep burning: child inherits <code>fire</code>, ember trail layer added</td></tr>
+            <tr><td class="m">fire + ice</td><td>transform</td><td>Neither overwrites: entity gains <code>steam</code>, loses both, steam = area + slow, flat damage from level (can't crit)</td></tr>
+            <tr><td class="m">crit + chain</td><td>amplify</td><td>Chain depth budget +1 on crit; the visual layer stacks a second glow</td></tr>
+            <tr><td class="m">heavy + fast</td><td>transform</td><td>Momentum: knockback = mass × velocity (see physics); becomes <code>ram</code></td></tr>
+            <tr><td class="m">shard + shard (child of child)</td><td>additive</td><td>Split count is inherited at 50%; that's the geometric series that keeps recursion finite</td></tr>
+            <tr><td class="m">any + wild</td><td>additive</td><td>Wild tag copies one random tag from the parent; makes builds drift</td></tr>
+          </tbody>
+        </table></div>
+        <div class="callout warm"><p><strong>Never overwrite.</strong> A buff that says "projectiles are now fire" is the overwrite anti-pattern: it deletes the phys build the player made. The convert layer replaces it: "50% of physical becomes fire" keeps the old modifiers working and makes the new ones work too. If a tag genuinely must replace another, route it through a transform row so the player gets a third thing, not a loss.</p></div>
+      </section>
+
+      <section id="physics">
+        <div class="sec-eyebrow">Physics</div>
+        <h2>Blending stats into physics without special cases</h2>
+        <p>Because it's 2D and the swarm is shader-driven, "physics" for us is a small set of quantities per entity. The trick is to derive every physical behaviour from resolved stats rather than giving buffs direct control of the body, so buffs that touch different stats blend through the equations for free.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Derived quantity</th><th>Formula</th><th>What blends through it</th></tr></thead>
+          <tbody>
+            <tr><td>Mass</td><td class="m">size³ × density_tag</td><td>Big Shot × Heavy × any tag that changes density</td></tr>
+            <tr><td>Knockback on hit</td><td class="m">mass × speed × knock_mult</td><td>Speed buffs and size buffs both become knockback; a slow heavy shot and a fast light one feel different for free</td></tr>
+            <tr><td>Bounce</td><td class="m">restitution = bounded(bounce_stacks), energy_kept = restitution × (1 − mass_penalty)</td><td>Bounce count is bounded, so "infinite bounces" is impossible without a special rule</td></tr>
+            <tr><td>Gravity</td><td class="m">g × (1 − float) × mass_scale</td><td>Float-tag buffs and mass buffs fight each other naturally</td></tr>
+            <tr><td>Drag / lifetime</td><td class="m">life = base × (1 + inc_life), drag = 1/mass</td><td>Heavy things coast, light things stop; lifetime buffs extend both</td></tr>
+            <tr><td>Split impulse</td><td class="m">children get parent velocity × 0.7 + radial × split_force</td><td>Speed buffs make shard bursts wider; split count and speed compound visually</td></tr>
+            <tr><td>Area on death</td><td class="m">radius = size × area_inc, dmg = mass × explode_frac</td><td>Big + explosive + heavy = big slow bombs; nobody codes "big bomb"</td></tr>
+          </tbody>
+        </table></div>
+        <p>The rule: a buff may add a modifier to <code>size</code>, <code>speed</code>, <code>density</code>, <code>bounce</code>, <code>float</code>, <code>life</code>, <code>split_force</code>, <code>explode_frac</code>. It may not set a body property directly. The derived table above is code that never changes; the pool of buffs changes weekly. Every physical quantity that has a ceiling (restitution, pierce, float) uses the bounded layer so the physics never goes non-finite, and because the swarm integrates in the vertex shader, these are all uniforms or per-instance custom data, not RigidBody2D calls.</p>
+      </section>
+
+      <section id="numbers">
+        <div class="sec-eyebrow">Tuning</div>
+        <h2>Numbers that work, from the games that shipped</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Knob</th><th>Range seen in the wild</th><th>Our starting value</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>"inc" per common buff</td><td>PoE tree nodes 8–20%; Brotato 5–15%; VS 10%</td><td class="n">25–40%</td><td>Fewer picks per run than those games, so each has to land</td></tr>
+            <tr><td>"more" per rare buff</td><td>PoE supports 20–50%; Gnorp acid ×1.5, ice ×2</td><td class="n">25–35%, tag-gated</td><td>Multiplicative, so anything above ~50% dominates by itself</td></tr>
+            <tr><td>Bounded stat per stack (a)</td><td>RoR2 Tougher Times 0.15; Brotato dodge cap 60%</td><td class="n">a = 0.15–0.35, cap 0.9–0.95</td><td>Five stacks ≈ 60% of cap; ten ≈ 75%; never 100%</td></tr>
+            <tr><td>Flat count (projectiles)</td><td>VS Amount cap +10; Nova Drift Volley trades damage</td><td class="n">+1 each, paired with −15% more</td><td>Count is a hidden "more" multiplier; must carry a tax</td></tr>
+            <tr><td>Chain / retrigger depth</td><td>Noita collapses at 3; PoE converts once</td><td class="n">depth 6, spawn budget 64/hit</td><td>Fork-bomb guard, and it's also the frame budget guard</td></tr>
+            <tr><td>Child damage fraction</td><td>Nova Drift splinter ~30–50%; Gnorp shards</td><td class="n">35–50%</td><td>Geometric series stays finite: 0.5 + 0.25 + … = 1×</td></tr>
+            <tr><td>Enemy HP growth per pick</td><td>Cookie Clicker cost 1.15; AdCap 1.07; Brotato waves ~1.2–1.3</td><td class="n">match the median build (≈ 1.28 with the sample pool)</td><td>The curve is an output of the sim, not an input: set it to whatever the p50 build grows at</td></tr>
+            <tr><td>Target spread, p90/p10 final power</td><td>—</td><td class="n">3–5×</td><td>Big enough that builds feel different, small enough that unlucky still finishes</td></tr>
+            <tr><td>Target outlier, max/p50</td><td>Balatro: infinite; Gnorp: ~10×</td><td class="n">5–10×</td><td>The "crazy combo" ceiling; more than this and the median run feels broken</td></tr>
+          </tbody>
+        </table></div>
+        <p>One idea from Gnorp worth stealing outright: make the global multiplier additive and driven by something visible and slow (there it's gnorp count; here it could be live object count on screen, which also rewards density), then let a handful of tag-gated <code>more</code> layers sit on top. Additive-slow at the bottom, multiplicative-rare at the top is what keeps a run predictable in shape while letting one pick spike it.</p>
+      </section>
+
+      <section id="track">
+        <div class="sec-eyebrow">Pacing</div>
+        <h2>A stable progress track that doesn't stifle ideas</h2>
+        <p>"Stable" means: the median player's time-to-kill stays roughly flat across the run, the unlucky player still makes progress, and the player who finds a combo pulls visibly ahead. The way to get all three is to separate what the <em>curve</em> controls from what the <em>picks</em> control.</p>
+        <ul>
+          <li><strong>The enemy HP curve is tuned to the p50 build under a random-ish picker</strong>, never to the best build. The sim gives that number directly.</li>
+          <li><strong>Every offer contains at least one safe generic</strong> (an <code>inc</code> or flat buff that works in any build). That's the floor; it stops the p10 run stalling. Slay the Spire's rule: one half of any synergy pair must be fine on its own.</li>
+          <li><strong>Tag-gated buffs are only offered once the tag exists</strong>, or they carry a small generic half. Otherwise they read as dead picks; the sim's dead-pick scan is exactly this failure.</li>
+          <li><strong>Offers are weighted toward tags already in the build</strong> (loyalty factor ~2–3×) with one wildcard slot ~15% of the time. Snowballing is the point; the wildcard is how runs drift somewhere new.</li>
+          <li><strong>Spikes are allowed but bounded by structure, not by nerfs:</strong> depth cap, spawn budget, bounded stats, converted-once. The ceiling comes from the rules, so a new buff can be as wild as we like and still can't go non-finite.</li>
+          <li><strong>Temporary multipliers for the biggest numbers.</strong> Cookie Clicker's Frenzy ×7 and Gnorp's +8 for three minutes both let the player taste absurd power without it being the new baseline.</li>
+        </ul>
+      </section>
+
+      <section id="sim">
+        <div class="sec-eyebrow">Testing</div>
+        <h2>Mathing out every route: buildsim.py</h2>
+        <p>A pure-Python simulator that implements the model above for a sample pool of 27 buffs and then explores the build space. It runs in about 15 seconds and is the tool we re-run every time the pool changes. The point isn't the sample pool (which is throwaway) but the questions it answers.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Pass</th><th>What it does</th><th>Question it answers</th></tr></thead>
+          <tbody>
+            <tr><td class="m">solo</td><td>Each buff alone vs. base</td><td>Is anything worthless or dominant on its own?</td></tr>
+            <tr><td class="m">synergy</td><td>Every pair: (both) / (a × b)</td><td>Which pairs blend (&gt; 1), which fight (&lt; 1)? Is every family getting a &gt; 1.3 pair?</td></tr>
+            <tr><td class="m">exhaustive</td><td>All k-subsets of the pool (k = 4: 17,550 builds; k = 6: 296,010)</td><td>Distribution of power; the true best build and the true worst; p90/p10 and max/p50 spread</td></tr>
+            <tr><td class="m">dead-pick scan</td><td>Marginal gain of each buff over 300 random contexts</td><td>Which buffs are +0% in most contexts (prerequisite problem)?</td></tr>
+            <tr><td class="m">Monte Carlo</td><td>Thousands of runs with offer-of-3 and three picker policies (random, tag-loyal, greedy)</td><td>What the real distribution looks like under the offer system, and the skill gap</td></tr>
+            <tr><td class="m">progress track</td><td>Per-pick p10/p50/p90 power vs the HP curve → time-to-kill</td><td>Is the curve tuned right? Does the unlucky player fall behind?</td></tr>
+            <tr><td class="m">dominance</td><td>Pick rate × lift on final power under greedy</td><td>Is a buff auto-pick? Is one never picked?</td></tr>
+          </tbody>
+        </table></div>
+        <p>"Every permutation" is only tractable because the resolver is order-independent by construction (buckets, not Balatro's left-to-right), so permutations collapse to combinations. At 27 buffs and 12 picks that's 17.4 million combinations, which is still cheap to sample exhaustively overnight if we ever need to, and the Monte Carlo covers the offer system on top. When the pool reaches 60+ buffs, exhaustive at k = 4 stays instant and Monte Carlo remains the tool for full runs.</p>
+        <p>Cost of keeping it honest: the evaluator is closed-form (expected damage per second), not a frame simulation. That's what makes millions of evaluations possible, and it's accurate for everything except emergent spatial stuff (a ricochet that happens to bounce into a crowd). Those we test in the game; everything numeric we test here first.</p>
+      </section>
+
+      <section id="results">
+        <div class="sec-eyebrow">Findings</div>
+        <h2>What the first two runs of the sim said</h2>
+        <p>Two iterations of the sample pool, each about a minute of tuning between them. This is the loop the tool is for.</p>
+
+        <h3>Iteration 1: flat count buffs dominate</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Signal</th><th class="n">Value</th><th>Read</th></tr></thead>
+          <tbody>
+            <tr class="bad"><td>Greedy pick rate: Heavy Shot / Swarm / Echo</td><td class="n">88% / 88% / 81%</td><td>Auto-picks. Flat count and flat damage beat every synergy because they're un-gated multipliers in disguise</td></tr>
+            <tr class="bad"><td>Exhaustive 4-pick max / p50</td><td class="n">4.9×</td><td>Top builds are all "count + flat", not combos</td></tr>
+            <tr class="bad"><td>Dead-pick scan</td><td class="n">7 buffs at +0% (p10)</td><td>Every tag-gated buff is worthless when its tag is absent</td></tr>
+            <tr><td>Big Shot marginal</td><td class="n">−2.3% median</td><td>A buff with a rate penalty and no upside in the model: a true dead pick</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>Iteration 2: tax count, boost gated, model conversion properly</h3>
+        <p>Changes: Twin Barrel and Swarm carry a "more" damage tax; Heavy Shot flat 8 → 5; gated Shard Damage 50% → 80%; Fire Spread spawns 2 at 50%; Big Shot gains a pierce upside; damage split into types so conversion double-dips both pools the PoE way.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Signal</th><th class="n">Before</th><th class="n">After</th><th>Read</th></tr></thead>
+          <tbody>
+            <tr class="good"><td>Exhaustive 4-pick max / p50</td><td class="n">4.9×</td><td class="n">3.6×</td><td>Top builds are now synergy builds (Splinter + Shard Damage + Echo + Twin Barrel)</td></tr>
+            <tr class="good"><td>Exhaustive p90 / p10</td><td class="n">3.1×</td><td class="n">2.4×</td><td>Tighter floor, same ceiling shape</td></tr>
+            <tr class="good"><td>Highest pick rate (greedy)</td><td class="n">88%</td><td class="n">81% (Echo)</td><td>Still high; Echo is an un-gated retrigger and wants a tag gate next</td></tr>
+            <tr class="good"><td>Strongest pair synergy</td><td class="n">1.54</td><td class="n">1.80 (Splinter + Shard Damage)</td><td>Fire family now has three pairs at 1.54</td></tr>
+            <tr><td>Monte Carlo p90/p10, tag-loyal picker</td><td class="n">4.9×</td><td class="n">4.5×</td><td>In the 3–5× target band</td></tr>
+            <tr><td>Skill gap, greedy p50 / random p50</td><td class="n">3.8×</td><td class="n">3.2×</td><td>Knowing the pool is worth ~3×; reasonable for a game about discovering combos</td></tr>
+            <tr class="bad"><td>Dead-pick scan</td><td class="n">7 at +0%</td><td class="n">7 at +0%</td><td>Unchanged by tuning, as expected: this is an <em>offer</em> problem, fixed by gating offers on tags, not by numbers</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>Progress track, iteration 2, tag-loyal picker, HP × 1.28 per pick</h3>
+        <div class="tbl"><table>
+          <thead><tr><th class="n">Pick</th><th class="n">Enemy HP</th><th class="n">p10 dps</th><th class="n">p50 dps</th><th class="n">p90 dps</th><th class="n">TTK p10</th><th class="n">TTK p50</th><th class="n">TTK p90</th></tr></thead>
+          <tbody>
+            <tr><td class="n">1</td><td class="n">38</td><td class="n">20</td><td class="n">25</td><td class="n">33</td><td class="n">1.87 s</td><td class="n">1.51 s</td><td class="n">1.17 s</td></tr>
+            <tr><td class="n">4</td><td class="n">81</td><td class="n">30</td><td class="n">48</td><td class="n">81</td><td class="n">2.67 s</td><td class="n">1.67 s</td><td class="n">1.00 s</td></tr>
+            <tr><td class="n">8</td><td class="n">216</td><td class="n">67</td><td class="n">133</td><td class="n">277</td><td class="n">3.22 s</td><td class="n">1.62 s</td><td class="n">0.78 s</td></tr>
+            <tr><td class="n">12</td><td class="n">580</td><td class="n">170</td><td class="n">391</td><td class="n">759</td><td class="n">3.42 s</td><td class="n">1.49 s</td><td class="n">0.76 s</td></tr>
+          </tbody>
+        </table></div>
+        <p>The median run is flat at about 1.5–1.7 s per kill the whole way, which is what "stable" looks like. The p90 run pulls ahead to 0.76 s, which is the combo payoff. The p10 run drifts from 1.9 s to 3.4 s: the unlucky player falls behind. Measured growth per pick is ×1.21 for p10, ×1.28 for p50 and ×1.33 for p90, so the 1.28 curve is already sitting on the median and the p10 gap is a floor problem, not a curve problem: it's fixed by the safe-generic-per-offer rule and by gating offers on tags, which lift the p10 line without moving p50. Both are one-line changes and one re-run.</p>
+        <div class="callout ok"><p><strong>What this buys us.</strong> Every new buff idea gets dropped into the pool and the sim tells us within a minute whether it's dead, dominant, or a real combo piece, and what it does to the p10/p50/p90 track, before anyone opens Godot. The pool can be as crazy as we like because the guard rails are structural.</p></div>
+      </section>
+
+      <section id="generator">
+        <div class="sec-eyebrow">Ideas</div>
+        <h2>A generator for mechanics we haven't thought of</h2>
+        <p>Because every mechanic in the model is <em>trigger × condition × effect × target × layer</em>, the space of possible buffs is a grammar, and a grammar can be sampled. Most outputs are junk; about one in five is a real idea, and one in twenty is something we'd never have written on purpose. Press the button until one of those shows up, then drop it into the sim.</p>
+        <div class="gen" id="gen">
+          <div class="out" id="gen-out" aria-live="polite">Press <b>Generate</b>.</div>
+          <button type="button" id="gen-btn">Generate</button>
+          <button type="button" class="ghost" id="gen-keep">Keep</button>
+          <ol class="hist" id="gen-hist"></ol>
+        </div>
+        <p>The grammar behind it, which is also the spec for the buff resource format:</p>
+<pre><code>WHEN   := on hit | on kill | on split | on crit | on bounce | every N-th shot | when 50+ objects on screen
+         | on pickup | when a child dies | on overkill | while standing still | on first hit of each enemy
+IF     := (none) | source has TAG | target has TAG | chain depth ≥ 2 | 3+ TAG objects alive
+         | hit was a crit | source is a child | target at low HP
+DO     := spawn N children [+TAG] at F% damage | convert F% TYPE→TYPE | add MOD(stat, layer, value) to TAG
+         | grant TAG to source | retrigger once (capped) | refund cooldown | pull / push nearby
+         | leave a zone that applies TAG | duplicate the source | swap two of the source's stats
+TARGET := source | its children | all TAG on screen | nearest 3 | the player's next shot
+LAYER  := add | inc | more | bounded | convert
+TAX    := (none) | −F% rate | −F% damage | consumes a child | shorter lifetime</code></pre>
+        <p>Three composition rules make generated ideas usable rather than random: every <code>more</code> or count effect comes with a <code>TAX</code>; every gated effect names a tag that exists in the pool; and any effect that spawns or retriggers goes through the depth and budget guards automatically, so nothing the generator produces can be non-finite.</p>
+      </section>
+
+      <section id="rules">
+        <div class="sec-eyebrow">Summary</div>
+        <h2>Rules to build against</h2>
+        <ol>
+          <li>Five layers, bucketed by operator: add, inc, more, bounded, convert. Same bucket dilutes, cross bucket multiplies.</li>
+          <li>Anything with a ceiling is bounded (hyperbolic). Nothing reaches 100%.</li>
+          <li>Tags on entities, gates on modifiers, inheritance on spawn. No pair code, ever.</li>
+          <li>Tag pairs resolve through a reaction table with three classes: amplify, transform, additive. Overwrite is not a class.</li>
+          <li>Conversion is one-way and happens once. Converted damage is scaled by both pools.</li>
+          <li>Depth cap 6, spawn budget per hit, retrigger cap 3. These are frame-budget guards as well as balance guards.</li>
+          <li>Physics is derived from stats through fixed equations. Buffs touch stats, never bodies.</li>
+          <li>Count and retrigger are multipliers in disguise; they carry a tax.</li>
+          <li>Every offer has one safe generic; gated buffs are offered only once their tag exists; offers are tag-loyal with a wildcard.</li>
+          <li>The HP curve is tuned to the p50 run under a tag-loyal picker. Target p90/p10 of 3–5×, max/p50 of 5–10×.</li>
+          <li>Every pool change is run through buildsim before it's run in Godot.</li>
+        </ol>
+      </section>
+
+      <section id="sources">
+        <div class="sec-eyebrow">Sources</div>
+        <h2>Where the numbers came from</h2>
+        <p style="font-size:14px;color:var(--ink-2)">Path of Exile: maxroll.gg damage-scaling guide; wesammikhail.com character-damage breakdown; PoE wiki, damage conversion; official forum thread 3647612. Balatro: balatrowiki.org naneinf guide; Destructoid joker order; GMTK "Balatro's cursed design problem". Risk of Rain 2: wiki, Item Stacking and 57 Leaf Clover. Noita: noita.wiki.gg Wand Mechanics, Expert Guide: Draw, Divide By Spells. Nova Drift: Mods Overview wiki; blog.novadrift.io; JayIsGames developer Q&amp;A. Vampire Survivors: vampire.survivors.wiki Might, Cooldown, Amount, Evolution. Brotato: brotato.wiki.spellsandguns.com Stats, Damage, Harvesting, Attack Speed. The Gnorp Apologue: Game Developer interview; gnorp.dev "Hats and Rust"; gnorp.wiki.gg Talents, Multiplier Growth, Strength in Numbers; Steam community build threads. Cookie Clicker: cookieclicker.wiki.gg Building, CpS, Kitten, Heavenly Chips. Antimatter Dimensions: antimatterdimensions.wiki.gg Tickspeed, Galaxies, Infinity Points. Design theory: Anthony Pecorella, "The Math of Idle Games" I–III (Game Developer) and GDC 2015; ludism.org Orthogonal Elements; Cloudfall Studios on Slay the Spire; Genshin wiki Elemental Reaction. Items the research flagged as uncertain (Gnorp's per-gnorp increment, Brotato's armour denominator, exact Genshin transformative multipliers) are not used for any number in this document.</p>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+(function(){
+  var WHEN=["on hit","on kill","on split","on crit","on bounce","every 5th shot","when 50+ objects are on screen","on pickup","when a child dies","on overkill","while standing still","on the first hit of each enemy","when two children collide","when a shot expires unhit"];
+  var IF=["","if the source has <b>fire</b>","if the target has <b>frozen</b>","if chain depth is 2 or more","if 3+ <b>shard</b> objects are alive","if the hit was a crit","if the source is a child","if the target is below 25% HP","if the source has bounced","if no enemy was hit this second"];
+  var TAGS=["fire","ice","shard","crit","heavy","fast","chain","ember","steam","wild","ram","zone"];
+  var DO=[
+    function(){return "spawn "+pick([1,2,3])+" children with <b>"+pick(TAGS)+"</b> at "+pick([30,35,50])+"% damage";},
+    function(){return "convert "+pick([25,50,100])+"% of <b>"+pick(["phys","fire","ice"])+"</b> to <b>"+pick(["fire","ice","shard"])+"</b>";},
+    function(){return "add <span class='k'>"+pick(["+25% inc","+30% more","+1 flat","bounded +0.2"])+"</span> "+pick(["damage","rate","size","speed","split count","pierce"])+" to everything tagged <b>"+pick(TAGS)+"</b>";},
+    function(){return "grant <b>"+pick(TAGS)+"</b> to the source";},
+    function(){return "retrigger once (capped)";},
+    function(){return "refund "+pick([25,50])+"% of the cooldown";},
+    function(){return pick(["pull","push"])+" the nearest "+pick([3,5])+" objects";},
+    function(){return "leave a zone for "+pick([1,2,3])+" s that applies <b>"+pick(TAGS)+"</b> to anything inside";},
+    function(){return "duplicate the source with half its stats";},
+    function(){return "swap the source's <b>"+pick(["size","speed","damage","rate"])+"</b> and <b>"+pick(["size","speed","damage","rate"])+"</b>";},
+    function(){return "its children inherit "+pick([50,75,100])+"% of the parent's <b>"+pick(["split","crit","speed"])+"</b>";},
+    function(){return "the player's next shot gains <b>"+pick(TAGS)+"</b> and +"+pick([50,100])+"% more damage";}
+  ];
+  var TARGET=["","","","for its children","for all <b>"+"</b> on screen","for the nearest 3","until the next pick"];
+  var TAX=["","","at −15% rate","at −20% damage","and consume one child","with shorter lifetime","but the source loses <b>"+"</b>"];
+  function pick(a){return a[Math.floor(Math.random()*a.length)];}
+  function gen(){
+    var w=pick(WHEN), i=pick(IF), d=pick(DO)(), t=pick(TARGET), x=pick(TAX);
+    if(t.indexOf("<b></b>")>=0) t=t.replace("<b></b>","<b>"+pick(TAGS)+"</b>");
+    if(x.indexOf("<b></b>")>=0) x=x.replace("<b>"+"</b>","<b>"+pick(TAGS)+"</b>");
+    var needsTax=/more|spawn|retrigger|duplicate|children inherit/.test(d);
+    if(needsTax && !x) x=pick(["at −15% rate","at −20% damage","and consume one child","with shorter lifetime"]);
+    var s="<span class='k'>"+cap(w)+"</span>"+(i?", "+i:"")+": "+d+(t?" "+t:"")+(x?", "+x:"")+".";
+    return s;
+  }
+  function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+  var out=document.getElementById("gen-out"), hist=document.getElementById("gen-hist"), cur="";
+  document.getElementById("gen-btn").addEventListener("click",function(){cur=gen();out.innerHTML=cur;});
+  document.getElementById("gen-keep").addEventListener("click",function(){
+    if(!cur) return; var li=document.createElement("li"); li.innerHTML=cur; hist.prepend(li);
+    while(hist.children.length>8) hist.removeChild(hist.lastChild);
+  });
+  cur=gen(); out.innerHTML=cur;
+})();
+</script>
+
+</body></html>

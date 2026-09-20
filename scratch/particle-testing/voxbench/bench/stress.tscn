@@ -1,0 +1,46 @@
+[gd_scene load_steps=7 format=3 uid="uid://bvoxbench0001"]
+
+[ext_resource type="Script" path="res://bench/stress.gd" id="1_stress"]
+[ext_resource type="Script" path="res://render/swarm.gd" id="2_swarm"]
+[ext_resource type="Script" path="res://render/actors.gd" id="3_actors"]
+[ext_resource type="Script" path="res://render/rig.gd" id="4_rig"]
+[ext_resource type="Script" path="res://bench/overlay.gd" id="5_overlay"]
+
+[sub_resource type="ParticleProcessMaterial" id="ppm_emit"]
+emission_shape = 1
+emission_sphere_radius = 6.0
+direction = Vector3(0, -1, 0)
+spread = 60.0
+initial_velocity_min = 80.0
+initial_velocity_max = 220.0
+gravity = Vector3(0, 300, 0)
+scale_min = 1.0
+scale_max = 2.0
+color = Color(1, 0.63, 0.29, 1)
+
+[node name="Stress" type="Node2D"]
+script = ExtResource("1_stress")
+
+[node name="Floor" type="ColorRect" parent="."]
+offset_left = 0.0
+offset_top = 520.0
+offset_right = 960.0
+offset_bottom = 540.0
+color = Color(0.16, 0.17, 0.22, 1)
+
+[node name="Swarm" type="MultiMeshInstance2D" parent="."]
+script = ExtResource("2_swarm")
+
+[node name="Actors" type="Node2D" parent="."]
+script = ExtResource("3_actors")
+
+[node name="Rig" type="Node2D" parent="."]
+script = ExtResource("4_rig")
+
+[node name="Emit" type="GPUParticles2D" parent="."]
+amount = 8
+process_material = SubResource("ppm_emit")
+lifetime = 1.2
+
+[node name="Overlay" type="CanvasLayer" parent="."]
+script = ExtResource("5_overlay")

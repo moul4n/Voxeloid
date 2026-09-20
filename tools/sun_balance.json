@@ -1,0 +1,155 @@
+{
+  "model_version": 2,
+  "step_seconds": 1.0,
+  "maximum_hours": 96,
+  "physical": {
+    "solar_mass_kg": 1.989e30,
+    "solar_radius_km": 695700.0,
+    "target_smu": 1000.0,
+    "ignition_smu": 75.0,
+    "ignition_temperature_mk": 4.0,
+    "finished_temperature_mk": 15.0
+  },
+  "source": {
+    "manual_mass_per_activation": 1.0,
+    "automatic_activations_per_second": 1.0,
+    "base_capture_efficiency": 0.9
+  },
+  "ambient": {
+    "visible_flybys_per_second": 24.0,
+    "average_mass_per_flyby": 1.0,
+    "base_capture_chance": 0.0005,
+    "mass_scale": 1000.0,
+    "mass_log10_gain": 0.006,
+    "maximum_capture_chance": 0.12
+  },
+  "helium": {
+    "atomic_mass_relative_to_hydrogen": 4.0,
+    "singularity_mass_fraction_after_unlock": 0.25,
+    "discovery_signal_mass_equivalent": 0.5,
+    "passive_full_sun_mass_per_second": 0.1,
+    "passive_mass_exponent": 0.8,
+    "passive_temperature_exponent": 2.0,
+    "profiles": {
+      "cool": {"temperature_multiplier": 0.94, "passive_helium_multiplier": 0.55},
+      "balanced": {"temperature_multiplier": 1.0, "passive_helium_multiplier": 1.0},
+      "hot": {"temperature_multiplier": 1.08, "passive_helium_multiplier": 1.8}
+    }
+  },
+  "core": {
+    "base_level_cost": 20.0,
+    "level_cost_growth": 1.8,
+    "sun_level_cap": 15,
+    "mass_bonus_scale": 1000.0,
+    "base_mass_log10_gain": 0.04,
+    "base_heat_coupling": 0.35,
+    "base_overclock_threshold": 0.1,
+    "base_overclock_gain": 0.5,
+    "base_safe_heat": 0.4,
+    "base_overheat_loss": 0.7
+  },
+  "compaction": {
+    "layers": 7,
+    "base_layer_mass": 6000.0,
+    "layer_growth": 2.1,
+    "base_production_multiplier": 1.45,
+    "heat_spike": 0.12,
+    "heat_spike_half_life_seconds": 45.0
+  },
+  "core_talents": {
+    "automatic_invocation": {"name": "Automatic Invocation", "max_rank": 1, "requires_spent": 0, "effects": {"automation_unlock": true}},
+    "resonant_pull": {"name": "Resonant Pull", "max_rank": 5, "requires_spent": 0, "effects": {"pull_mass_mult": 1.15}},
+    "rapid_recovery": {"name": "Rapid Recovery", "max_rank": 5, "requires_spent": 0, "effects": {"auto_rate_mult": 1.6}},
+    "efficient_assimilation": {"name": "Efficient Assimilation", "max_rank": 4, "requires_spent": 2, "effects": {"core_cost_mult": 0.9}},
+    "gravity_focus": {"name": "Gravity Focus", "max_rank": 4, "requires_spent": 3, "effects": {"source_capture_mult": 1.06, "ambient_capture_mult": 1.15}},
+    "mass_lattice": {"name": "Mass Lattice", "max_rank": 5, "requires_spent": 3, "effects": {"core_mass_gain_add": 0.06}},
+    "compression_harvest": {"name": "Compression Harvest", "max_rank": 4, "requires_spent": 6, "effects": {"compact_core_credit_add": 0.015}},
+    "thermal_conduits": {"name": "Thermal Conduits", "max_rank": 4, "requires_spent": 6, "effects": {"heat_coupling_add": 0.1, "safe_heat_add": 0.07}},
+    "overclock_governor": {"name": "Overclock Governor", "max_rank": 4, "requires_spent": 9, "effects": {"overclock_gain_add": 0.55, "safe_heat_add": 0.03}},
+    "echo_pull": {"name": "Echo Pull", "max_rank": 3, "requires_spent": 9, "effects": {"pull_mass_mult": 1.12}},
+    "continuous_breach": {"name": "Continuous Breach", "max_rank": 1, "requires_spent": 14, "effects": {"auto_rate_mult": 2.0}}
+  },
+  "sun_talents": {
+    "accretion_channels": {"name": "Accretion Channels", "max_rank": 3, "requires_spent": 0, "effects": {"source_capture_mult": 1.12}},
+    "dense_shells": {"name": "Dense Shells", "max_rank": 3, "requires_spent": 0, "effects": {"layer_requirement_mult": 0.92}},
+    "compression_drive": {"name": "Compression Drive", "max_rank": 3, "requires_spent": 0, "effects": {"compact_production_mult": 1.08}},
+    "gravitational_heating": {"name": "Gravitational Heating", "max_rank": 3, "requires_spent": 0, "effects": {"heat_coupling_add": 0.08}},
+    "fusion_feedback": {"name": "Fusion Feedback", "max_rank": 3, "requires_spent": 2, "effects": {"fusion_production_mult": 1.15}},
+    "retention_field": {"name": "Retention Field", "max_rank": 2, "requires_spent": 2, "effects": {"overheat_loss_mult": 0.7}},
+    "ambient_funnel": {"name": "Ambient Funnel", "max_rank": 3, "requires_spent": 1, "effects": {"ambient_capture_mult": 1.25}},
+    "system_seeding": {"name": "System Seeding Protocol", "max_rank": 1, "requires_spent": 6, "effects": {}}
+  },
+  "scenarios": {
+    "click_no_upgrades": {
+      "description": "One manual activation per second for the whole Sun, with all talent points unspent",
+      "manual_activations_per_second": 1.0,
+      "manual_input_duration_minutes": 5760.0,
+      "core_allocation_fraction": 0.0,
+      "target_core_level": 0,
+      "stellar_profile": "balanced",
+      "core_talent_order": [],
+      "sun_talent_order": []
+    },
+    "hold_no_upgrades": {
+      "description": "Nine manual activations per second for the whole Sun, with all talent points unspent",
+      "manual_activations_per_second": 9.0,
+      "manual_input_duration_minutes": 5760.0,
+      "core_allocation_fraction": 0.0,
+      "target_core_level": 0,
+      "stellar_profile": "balanced",
+      "core_talent_order": [],
+      "sun_talent_order": []
+    },
+    "automation": {
+      "description": "Eight active minutes, then an automation-first Core and Sun build",
+      "manual_activations_per_second": 9.0,
+      "manual_input_duration_minutes": 8.0,
+      "core_allocation_fraction": 0.38,
+      "target_core_level": 15,
+      "stellar_profile": "balanced",
+      "core_talent_order": ["automatic_invocation", "rapid_recovery", "rapid_recovery", "rapid_recovery", "rapid_recovery", "resonant_pull", "resonant_pull", "resonant_pull", "resonant_pull", "gravity_focus", "gravity_focus", "gravity_focus", "echo_pull", "echo_pull", "continuous_breach"],
+      "sun_talent_order": ["accretion_channels", "accretion_channels", "accretion_channels", "compression_drive", "compression_drive", "compression_drive", "system_seeding"]
+    },
+    "core_mass": {
+      "description": "A heavy Core investment that turns assimilated mass and compaction energy into production",
+      "manual_activations_per_second": 9.0,
+      "manual_input_duration_minutes": 8.0,
+      "core_allocation_fraction": 0.52,
+      "post_cap_core_allocation_fraction": 0.18,
+      "target_core_level": 15,
+      "stellar_profile": "cool",
+      "core_talent_order": ["automatic_invocation", "rapid_recovery", "rapid_recovery", "rapid_recovery", "rapid_recovery", "efficient_assimilation", "efficient_assimilation", "efficient_assimilation", "mass_lattice", "mass_lattice", "mass_lattice", "mass_lattice", "compression_harvest", "compression_harvest", "compression_harvest"],
+      "sun_talent_order": ["dense_shells", "dense_shells", "dense_shells", "compression_drive", "compression_drive", "compression_drive", "system_seeding"]
+    },
+    "thermal_overclock": {
+      "description": "A heat build that turns the late protostar and ignition into a Core overclock",
+      "manual_activations_per_second": 9.0,
+      "manual_input_duration_minutes": 8.0,
+      "core_allocation_fraction": 0.4,
+      "target_core_level": 15,
+      "stellar_profile": "hot",
+      "core_talent_order": ["automatic_invocation", "rapid_recovery", "rapid_recovery", "rapid_recovery", "rapid_recovery", "resonant_pull", "resonant_pull", "thermal_conduits", "thermal_conduits", "thermal_conduits", "thermal_conduits", "overclock_governor", "overclock_governor", "overclock_governor", "overclock_governor"],
+      "sun_talent_order": ["gravitational_heating", "gravitational_heating", "gravitational_heating", "fusion_feedback", "fusion_feedback", "fusion_feedback", "system_seeding"]
+    },
+    "cool_star": {
+      "description": "A cool retention build with slower helium synthesis and lower heat stress",
+      "manual_activations_per_second": 9.0,
+      "manual_input_duration_minutes": 8.0,
+      "core_allocation_fraction": 0.38,
+      "target_core_level": 15,
+      "stellar_profile": "cool",
+      "core_talent_order": ["automatic_invocation", "rapid_recovery", "rapid_recovery", "rapid_recovery", "rapid_recovery", "resonant_pull", "resonant_pull", "resonant_pull", "resonant_pull", "gravity_focus", "gravity_focus", "gravity_focus", "echo_pull", "echo_pull", "continuous_breach"],
+      "sun_talent_order": ["accretion_channels", "accretion_channels", "accretion_channels", "retention_field", "retention_field", "ambient_funnel", "system_seeding"]
+    },
+    "accretion": {
+      "description": "A source-focused build that maximises singularity mass and capture",
+      "manual_activations_per_second": 9.0,
+      "manual_input_duration_minutes": 8.0,
+      "core_allocation_fraction": 0.36,
+      "target_core_level": 15,
+      "stellar_profile": "balanced",
+      "core_talent_order": ["automatic_invocation", "resonant_pull", "resonant_pull", "resonant_pull", "resonant_pull", "resonant_pull", "rapid_recovery", "rapid_recovery", "rapid_recovery", "rapid_recovery", "gravity_focus", "gravity_focus", "gravity_focus", "gravity_focus", "echo_pull"],
+      "sun_talent_order": ["accretion_channels", "accretion_channels", "accretion_channels", "ambient_funnel", "ambient_funnel", "compression_drive", "system_seeding"]
+    }
+  }
+}

@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vox Speed Bible</title>
+<style>:root{color-scheme:light dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head><body>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#f3f4f8; --paper:#ffffff; --ink:#151a26; --ink-2:#4a5266; --ink-3:#8a91a3;
+    --line:#dcdfe8; --line-2:#c6cad6;
+    --accent:#1f4fd8; --accent-ink:#ffffff; --accent-soft:#e6ecfc;
+    --warm:#d6791a; --warm-soft:#fbeedc;
+    --ok:#1c8a5a; --code-bg:#eef0f6;
+    --shadow:0 1px 0 rgba(21,26,38,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#111420; --paper:#181c2a; --ink:#e9ebf3; --ink-2:#b1b7c8; --ink-3:#767d92;
+      --line:#272c3d; --line-2:#353b50;
+      --accent:#6f95ff; --accent-ink:#0d1220; --accent-soft:#1c2748;
+      --warm:#f0a04b; --warm-soft:#3a2a15;
+      --ok:#4fc58d; --code-bg:#12151f;
+      --shadow:none;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#111420; --paper:#181c2a; --ink:#e9ebf3; --ink-2:#b1b7c8; --ink-3:#767d92;
+    --line:#272c3d; --line-2:#353b50;
+    --accent:#6f95ff; --accent-ink:#0d1220; --accent-soft:#1c2748;
+    --warm:#f0a04b; --warm-soft:#3a2a15;
+    --ok:#4fc58d; --code-bg:#12151f;
+    --shadow:none;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.6;padding-inline:16px;padding-block:0 64px;}
+  a{color:var(--accent)}
+  h1,h2,h3{font-family:"Chakra Petch","IBM Plex Sans",system-ui,sans-serif;text-wrap:balance;line-height:1.15;margin:0}
+  h1{font-size:clamp(34px,6vw,58px);font-weight:700;letter-spacing:-.01em}
+  h2{font-size:26px;font-weight:600;margin-block:0 14px}
+  h3{font-size:17px;font-weight:600;margin-block:22px 8px}
+  p{margin:0 0 14px}
+  code{font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.9em;background:var(--code-bg);padding:1px 5px;border-radius:3px}
+  pre{font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;font-size:13.5px;line-height:1.5;background:var(--code-bg);border:1px solid var(--line);padding:14px 16px;overflow-x:auto;margin:0 0 16px;border-radius:4px}
+  pre code{background:none;padding:0}
+
+  .wrap{max-width:1080px;margin:0 auto}
+  header{padding-block:40px 28px;border-bottom:1px solid var(--line-2);display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
+  .lede{font-size:18px;color:var(--ink-2);max-width:60ch;margin-top:14px}
+  #cubes{width:180px;height:140px;max-width:100%}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 20px;font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink-3);padding-block:14px;border-bottom:1px solid var(--line)}
+  .meta b{color:var(--ink);font-weight:500}
+
+  .layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px;margin-top:32px}
+  nav{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);align-self:start;font-size:13.5px}
+  nav .eyebrow{margin-bottom:8px}
+  nav a{display:block;color:var(--ink-2);text-decoration:none;padding:5px 0 5px 12px;border-left:2px solid var(--line)}
+  nav a:hover,nav a:focus-visible{color:var(--ink);border-left-color:var(--accent);outline:none}
+  main{min-width:0}
+  section{padding-block:12px 36px;border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:0}
+  section > p, section > ul, section h3{max-width:68ch}
+  ul{padding-left:20px;margin:0 0 14px}
+  li{margin-bottom:6px}
+  .sec-eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+
+  .pillars{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-block:8px 18px}
+  .pillar{background:var(--paper);padding:16px 18px}
+  .pillar h3{margin-top:0;font-size:16px}
+  .pillar p{margin:0;font-size:14.5px;color:var(--ink-2)}
+
+  table{border-collapse:collapse;width:100%;font-size:14.5px;margin-block:8px 18px}
+  .tbl{overflow-x:auto}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:500;border-bottom:1px solid var(--line-2)}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",monospace;font-size:13.5px;white-space:nowrap}
+  tr.target td{background:var(--accent-soft)}
+
+  .callout{background:var(--paper);border-left:3px solid var(--accent);padding:14px 18px;margin-block:10px 18px;box-shadow:var(--shadow);max-width:72ch}
+  .callout.warm{border-left-color:var(--warm)}
+  .callout p:last-child{margin-bottom:0}
+  .status{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:2px;vertical-align:middle}
+  .status.open{background:var(--warm-soft);color:var(--warm)}
+  .status.locked{background:var(--accent-soft);color:var(--accent)}
+  .status.done{background:var(--accent);color:var(--accent-ink)}
+
+  .decisions{display:grid;gap:10px;margin-block:8px 18px}
+  .decision{display:grid;grid-template-columns:110px 1fr;gap:14px;align-items:start;padding:12px 0;border-bottom:1px solid var(--line)}
+  .decision:last-child{border-bottom:0}
+  .decision p{margin:0;font-size:15px}
+  .decision small{display:block;color:var(--ink-3);margin-top:3px;font-size:13.5px}
+
+  .roadmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-block:8px 18px}
+  .phase{background:var(--paper);border:1px solid var(--line);padding:16px 18px;box-shadow:var(--shadow)}
+  .phase .ph{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+  .phase.now{border-color:var(--accent)}
+  .phase.now .ph{color:var(--accent)}
+  .phase h3{margin-top:0;font-size:16px}
+  .phase ul{font-size:14px;color:var(--ink-2);margin:0;padding-left:18px}
+
+  @media (max-width:780px){
+    header{grid-template-columns:1fr}
+    #cubes{display:none}
+    .layout{grid-template-columns:1fr;gap:24px}
+    nav{position:static;display:flex;flex-wrap:wrap;gap:4px 14px}
+    nav .eyebrow{width:100%}
+    nav a{border-left:0;padding:4px 0}
+    .decision{grid-template-columns:1fr;gap:4px}
+  }
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Design document · v0.1 · working title pending</div>
+      <h1>Vox Speed Bible</h1>
+      <p class="lede">A short-form, high-speed 2D game where power-ups and talents stack into absurd combos and every run looks different. Before any of that exists, we build one tiny thing: a scene that throws thousands of animated voxel sprites around at 200+ fps on a cheap laptop.</p>
+    </div>
+    <canvas id="cubes" width="360" height="280" aria-hidden="true"></canvas>
+  </header>
+  <div class="meta">
+    <span>Engine <b>Godot 4.x · 2D · Compatibility renderer</b></span>
+    <span>Art <b>MagicaVoxel → baked sprite sheets</b></span>
+    <span>Phase <b>0 — Stress bed</b></span>
+    <span>Name / story / core loop <b>undecided</b></span>
+  </div>
+
+  <div class="layout">
+    <nav aria-label="Sections">
+      <div class="eyebrow">Contents</div>
+      <a href="#known">What we know</a>
+      <a href="#pillars">Pillars</a>
+      <a href="#phase0">Phase 0: stress bed</a>
+      <a href="#budget">Frame budget</a>
+      <a href="#density">Density tiers</a>
+      <a href="#art">Art pipeline</a>
+      <a href="#artdir">Art direction</a>
+      <a href="#anim">Compounding animation</a>
+      <a href="#systems">Core systems</a>
+      <a href="#settings">Project settings</a>
+      <a href="#open">Open decisions</a>
+      <a href="#roadmap">Roadmap</a>
+    </nav>
+
+    <main>
+      <section id="known">
+        <div class="sec-eyebrow">Starting point</div>
+        <h2>What we know, and what we're deliberately leaving blank</h2>
+        <p>The game has no name, no story and no core mechanic yet. That's intentional. The genre we're aiming at (short runs, fast pace, buffs that multiply into chaos; think The Gnorp Apologue and the small asteroid-mining idle games in the same space) lives or dies on how it <em>feels</em> at high density, and feel is impossible to judge in a design doc. So this document commits to the technical and visual foundation, states the pillars that every later mechanic must serve, and lists the decisions we're parking until the stress bed proves the foundation.</p>
+        <div class="callout">
+          <p><strong>Rule for this phase:</strong> nothing goes in the project that doesn't help answer "can we keep 200 fps with several thousand animated vox sprites on integrated graphics?" No menus, no progression, no save system, no story.</p>
+        </div>
+      </section>
+
+      <section id="pillars">
+        <div class="sec-eyebrow">Pillars</div>
+        <h2>Four things every later decision is checked against</h2>
+        <div class="pillars">
+          <div class="pillar"><h3>Speed</h3><p>Runs are minutes, not hours. Input to on-screen reaction is one frame. Nothing waits on a tween to finish before you can act again.</p></div>
+          <div class="pillar"><h3>Compounding</h3><p>Buffs never touch numbers directly. They add tags and modifiers, and mechanics interact through tags, so combos emerge without bespoke code per pairing.</p></div>
+          <div class="pillar"><h3>Density</h3><p>The screen should get <em>fuller</em> as a run progresses. Spam is the reward. The renderer must handle the ridiculous late-run state, not the polite early one.</p></div>
+          <div class="pillar"><h3>Different every time</h3><p>Progression is generated from a seed with weighted, tag-aware offers. Two runs should look like two different games by the halfway point.</p></div>
+        </div>
+      </section>
+
+      <section id="phase0">
+        <div class="sec-eyebrow">Phase 0</div>
+        <h2>The stress bed</h2>
+        <p>A single Godot scene with a debug overlay and keyboard controls. No gameplay. Its only job is to produce numbers we trust and a visual we like.</p>
+        <h3>What it contains</h3>
+        <ul>
+          <li>One baked vox "guy" rigged as separate parts (head, body, two legs, one tool) that idles, walks and swings using tweens only.</li>
+          <li>A spawner that throws N vox debris sprites (rock chunks, sparks, shards) with velocity, gravity, bounce and fade. N is bound to keys: 100, 1k, 5k, 20k.</li>
+          <li>A "buff stack" toggle that layers visual effects on everything on screen: tint, emission glow, scale pulse, trail, extra particle emitter. Each key adds one more layer so we can watch the cost climb.</li>
+          <li>A debug overlay: fps, frame time (ms), physics time, draw calls, live node count, live instance count, GPU name.</li>
+          <li>A capture mode that records 10 seconds of frame times to a CSV so results are comparable across machines.</li>
+        </ul>
+        <h3>Definition of done</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Scenario</th><th class="n">Live objects</th><th class="n">Visual layers</th><th class="n">Target fps (dev PC)</th><th class="n">Floor (modern iGPU)</th></tr></thead>
+          <tbody>
+            <tr><td>Idle: one rigged guy, nothing else</td><td class="n">1</td><td class="n">0</td><td class="n">uncapped</td><td class="n">≥ 1000</td></tr>
+            <tr><td>Mid run: debris shower</td><td class="n">2,000</td><td class="n">3</td><td class="n">≥ 500</td><td class="n">≥ 240</td></tr>
+            <tr class="target"><td><strong>Late run: this is the bar</strong></td><td class="n">10,000</td><td class="n">6</td><td class="n">≥ 300</td><td class="n">≥ 144</td></tr>
+            <tr><td>Absurd: does it degrade gracefully</td><td class="n">50,000</td><td class="n">6</td><td class="n">≥ 144</td><td class="n">≥ 60</td></tr>
+          </tbody>
+        </table></div>
+        <p>The dev PC is the primary target; the floor column is a sanity check on something like a recent Intel Iris Xe or AMD 780M laptop, not a decade-old chip. We're aiming for extremely good performance with tens of thousands of tiny objects, not broad low-end support. The full test procedure, metrics format and build order live in the companion <strong>Phase 0 Build Plan</strong>.</p>
+      </section>
+
+      <section id="budget">
+        <div class="sec-eyebrow">Budget</div>
+        <h2>Frame budget</h2>
+        <p>Everything below is per frame and has to fit in the budget of the fps we're targeting. Physics runs on its own fixed tick so it doesn't scale with render rate.</p>
+        <div class="tbl"><table>
+          <thead><tr><th class="n">Target fps</th><th class="n">Frame budget</th><th>What has to fit</th></tr></thead>
+          <tbody>
+            <tr><td class="n">60</td><td class="n">16.67 ms</td><td>Graceful-degradation floor. Never dip below this on the iGPU.</td></tr>
+            <tr><td class="n">144</td><td class="n">6.94 ms</td><td>Floor on a modern laptop iGPU at late-run density.</td></tr>
+            <tr><td class="n">240</td><td class="n">4.17 ms</td><td>What a 240 Hz monitor owner should see most of the time.</td></tr>
+            <tr class="target"><td class="n">300</td><td class="n">3.33 ms</td><td>Primary target on the dev PC at 10,000 live objects with six layers.</td></tr>
+            <tr><td class="n">Physics tick</td><td class="n">60 Hz fixed</td><td>Interpolation on, so movement stays smooth at any render rate.</td></tr>
+          </tbody>
+        </table></div>
+        <p>At the dev-PC target of 300 fps the whole frame is 3.33 ms: render ≤ 1.8 ms, script (spawner, tweens, event bus) ≤ 1 ms, physics amortised ≤ 0.3 ms, headroom ≈ 0.2 ms. The overlay reports each so we can see which bucket is blowing up.</p>
+      </section>
+
+      <section id="density">
+        <div class="sec-eyebrow">Rendering</div>
+        <h2>Density tiers: not everything is a node</h2>
+        <p>In 2D Godot the frame rate killers are node count and draw calls, not pixel fill. So on-screen things are split into three tiers by how much individuality they need, and the tier decides how they're drawn.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Tier</th><th>What</th><th>How it's drawn</th><th class="n">Budget</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Hero</strong></td><td>Player, bosses, anything with a part rig and per-object tween animation</td><td>Node2D with child Sprite2D parts, tweens, per-node shader</td><td class="n">≤ 50 nodes</td></tr>
+            <tr><td><strong>Actor</strong></td><td>Enemies, pickups, projectiles that need collision and individual state</td><td>Pooled scenes (never <code>instantiate()</code> mid-run), Area2D overlap, one Sprite2D each</td><td class="n">≤ 1,500 nodes</td></tr>
+            <tr><td><strong>Swarm</strong></td><td>Debris, shards, sparks, chunks, number popups; anything that only needs position, rotation, scale, colour, frame</td><td>One <code>MultiMeshInstance2D</code> per atlas, transforms + custom data updated from a packed array each frame; motion computed in a tight loop, or moved to the vertex shader</td><td class="n">≤ 20,000 instances, 1–3 draw calls</td></tr>
+          </tbody>
+        </table></div>
+        <div class="callout warm">
+          <p><strong>The swarm tier is the phase 0 risk.</strong> GDScript iterating 20k instances per frame will not fit 4 ms. Plan A is to keep per-instance motion in the MultiMesh's custom data and integrate it in the vertex shader (position += velocity × t, gravity, fade by age), so the CPU only writes on spawn. Plan B is a C# or GDExtension update loop. Phase 0 measures both.</p>
+        </div>
+        <p>Particles (GPUParticles2D) are a fourth path for pure eye-candy with no gameplay meaning: trails, glow motes, dust. Compatibility renderer supports GPU particles; CPUParticles2D is the fallback if a specific iGPU driver misbehaves.</p>
+      </section>
+
+      <section id="art">
+        <div class="sec-eyebrow">Art</div>
+        <h2>Vox in, sprites out</h2>
+        <p>We keep the voxel workflow because it's fast to author and chunky to look at, but nothing is voxel at runtime. Every model is baked to a sprite sheet once.</p>
+        <h3>Pipeline</h3>
+        <ul>
+          <li><strong>Model</strong> in MagicaVoxel on a 16³ or 32³ grid. One <code>.vox</code> per part, not per character, so parts can be swapped and recoloured independently.</li>
+          <li><strong>Bake</strong> with a headless Blender script (import vox → orthographic camera → render 8 yaw angles for things that turn, 1 for things that don't) at 2× target size, then downsample with nearest-neighbour to keep the voxel edges crisp. Output one atlas per model and a JSON of frame rects.</li>
+          <li><strong>Import</strong> into Godot with filter off, mipmaps off, atlas packed by the importer. Palette is a shared 32-colour ramp so tinting and emission shaders behave the same on every sprite.</li>
+          <li><strong>Rig</strong> hero-tier things as a parts tree: <code>Guy/Body</code>, <code>Guy/Head</code>, <code>Guy/LegL</code>, <code>Guy/LegR</code>, <code>Guy/Tool</code>. Pivot points set at joints. Animation is code-driven tweens on rotation, scale and offset; there are no hand-keyed frames.</li>
+        </ul>
+        <p>Because animation is procedural on rigid parts, a new character costs one afternoon of vox modelling and zero animation work. That's the property the whole game leans on.</p>
+      </section>
+
+      <section id="artdir">
+        <div class="sec-eyebrow">Art direction</div>
+        <h2>What a vox is, and where the pretty comes from</h2>
+        <p>A <code>.vox</code> is a 3D grid where each cell is empty or holds one byte: an index into a 256-colour palette. A 16³ model is 4,096 cells and a character is usually under a thousand filled ones. No textures, no UVs, no normals. The colour lives in the palette, not the model, and almost everything below is a consequence of that.</p>
+
+        <h3>Three sources of the look</h3>
+        <div class="pillars">
+          <div class="pillar"><h3>Palette</h3><p>Voxel art is palette art. One shared ramp of 24–32 colours, each hue in 4–5 shades. Everything built on it belongs together automatically, and tint and hue-shift shaders behave predictably because they act on known ramps.</p></div>
+          <div class="pillar"><h3>Baked lighting</h3><p>The bake gives real directional light, ambient occlusion in crevices, soft shadow and a rim light for free. One fixed light (top-left, slightly front) for every bake so the whole game reads as one lit world despite being flat sprites.</p></div>
+          <div class="pillar"><h3>Materials</h3><p>MagicaVoxel palette slots can be emissive, metal, glass or rough. A fire shard is a rock shard with one slot swapped to emissive orange, not a new model. This is the main lever for buff visuals.</p></div>
+        </div>
+
+        <h3>Palette spec</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Slot range</th><th>Purpose</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="n">1–5</td><td>Neutral ramp</td><td>Near-black to off-white; shared shadow and highlight steps for every model</td></tr>
+            <tr><td class="n">6–29</td><td>Six hues × 4 shades</td><td>Rock grey-brown, ice blue, ember orange, acid green, crystal violet, gold. Each hue's shades are evenly spaced in lightness so the tint shader can shift the whole ramp</td></tr>
+            <tr><td class="n">30–32</td><td>Emissive</td><td>Ember, arc-blue, toxic green. Flagged emissive in MagicaVoxel so the bake blooms them</td></tr>
+            <tr><td class="n">200–215</td><td>ID palette</td><td>Sixteen flat "role" colours (base, shade, highlight, accent, emissive…) used for the neutral bake that the runtime remap reads. Never seen on screen</td></tr>
+          </tbody>
+        </table></div>
+        <p>Rule per model: at most two hues from the ramp plus the neutral shades. Saturation lives in the buff layers, not the model. Busy models plus busy effects at 10,000 instances is mud; quiet models plus loud effects is the look we want.</p>
+
+        <h3>How variety is manufactured</h3>
+        <ul>
+          <li><strong>Palette swap.</strong> The model stores indices, so the same vox under a different palette is a different object at zero authoring cost. Preferred form: bake once in the ID palette, then remap in the shader at runtime from a 16-entry lookup. One rock atlas becomes ice, lava, crystal and gold rocks, and a buff can retint a whole category live.</li>
+          <li><strong>Part swap.</strong> A guy is head + body + legs + tool; five of each gives 625 combinations. Rocks are core shape + crust layer + inclusion. Parts share pivots so any combination rigs without adjustment.</li>
+          <li><strong>Procedural voxels.</strong> A grid is trivial to generate in code. Rocks are spheres carved by 3D noise, debris is a random 3–5 voxel blob, crystals are extruded hexagons. Phase 0 gets a small Python generator so the debris set has a hundred distinct chunk shapes without opening MagicaVoxel.</li>
+          <li><strong>Rotation for free.</strong> One bake yields 8 yaw angles from the same model; hand-drawn sprites would need each drawn.</li>
+        </ul>
+
+        <h3>Grid sizes and on-screen scale</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Thing</th><th>Grid</th><th class="n">Base-res height</th><th>Where the look comes from</th></tr></thead>
+          <tbody>
+            <tr><td>Hero guy (5 parts)</td><td>16³ (head 8×8×8, body 10×12×8)</td><td class="n">≈ 24 px</td><td>Shape, lighting, part animation</td></tr>
+            <tr><td>Actors (enemies, pickups)</td><td>8³–12³</td><td class="n">10–16 px</td><td>Silhouette and one accent colour</td></tr>
+            <tr><td>Swarm debris</td><td>4³–8³</td><td class="n">3–8 px</td><td>Palette and lighting only; shape barely registers</td></tr>
+            <tr><td>Big rocks, bosses</td><td>32³</td><td class="n">≈ 48 px</td><td>Full ramp, materials, AO</td></tr>
+          </tbody>
+        </table></div>
+        <p>At 960×540 with a 2× window, a 16-voxel guy is about 24 base pixels tall, which is the right size for "tiny things, thousands of them". Bake at 2× and nearest-downsample so cube edges stay crisp. Keep an unlit flat pass alongside the lit one: tint and glow shaders multiply against the flat pass so buffs don't fight the baked shadows.</p>
+      </section>
+
+      <section id="anim">
+        <div class="sec-eyebrow">Animation</div>
+        <h2>Compounding animation is a layer stack, not a set of clips</h2>
+        <p>The pitch says "animations compound". Concretely: every buff may declare a visual layer, and layers are additive effects attached to whatever the buff touches. Ten buffs on a rock means ten layers on the rock, none of which were authored for that combination.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Layer</th><th>Mechanism</th><th>Cost</th><th>Stacks how</th></tr></thead>
+          <tbody>
+            <tr><td>Tint</td><td>Shader uniform, modulate</td><td>Free</td><td>Multiplies; capped at 3 tints, later ones blend at 50%</td></tr>
+            <tr><td>Emission / glow</td><td>Shader: additive pass on palette-masked pixels</td><td>Cheap</td><td>Intensity sums, colour blends</td></tr>
+            <tr><td>Scale pulse</td><td>Tween on scale, phase from instance seed</td><td>Cheap</td><td>Amplitudes sum, frequencies stay distinct so it looks alive not noisy</td></tr>
+            <tr><td>Wobble / squash</td><td>Vertex shader driven by <code>TIME</code> + seed</td><td>Free on GPU</td><td>Sums; hero tier only</td></tr>
+            <tr><td>Trail</td><td>Line2D or ghost sprites from pool</td><td>Medium</td><td>One trail per object, colour from strongest tint</td></tr>
+            <tr><td>Emitter</td><td>Child GPUParticles2D, shared material per buff</td><td>Medium–high</td><td>Capped at 2 per object; extra buffs raise emission rate instead</td></tr>
+            <tr><td>Screen</td><td>Global: shake, chromatic pulse, hit-stop</td><td>Free</td><td>Never stacks; strongest event wins, cooldown 80 ms</td></tr>
+          </tbody>
+        </table></div>
+        <p>Every layer takes its phase from a per-instance seed and its magnitude from the stat resolver, so the same buff looks slightly different on every object and scales visually as the build scales numerically. Caps exist so density never turns into mud.</p>
+      </section>
+
+      <section id="systems">
+        <div class="sec-eyebrow">Architecture</div>
+        <h2>Core systems (built after phase 0, designed now)</h2>
+        <p>These are the four pieces that let mechanics combine without per-pair code. They're listed here so phase 0 doesn't paint us into a corner, but none of them are written until the renderer passes.</p>
+
+        <h3>1. Stat resolver</h3>
+        <p>Every gameplay number is a <code>Stat</code>: base value plus a list of modifiers, each carrying a tag set and a layer. Resolution is cached and only recomputed when a modifier is added or removed.</p>
+<pre><code>value = (base + Σ add) × (1 + Σ increased) × Π (1 + more)
+        filtered to modifiers whose tags ⊆ the entity's tags</code></pre>
+
+        <h3>2. Event bus</h3>
+        <p>One autoload emits typed events: <code>hit</code>, <code>kill</code>, <code>crit</code>, <code>split</code>, <code>pickup</code>, <code>tick</code>. Buffs subscribe with <code>on / if / do</code> triples and their effects may emit further events. Each event carries a depth counter capped at 8 and the bus enforces a per-frame spawn budget. Chain reactions are allowed; fork bombs are not.</p>
+
+        <h3>3. Tags on everything</h3>
+        <p>A projectile is not a <code>FireProjectile</code> class. It's a pooled scene with <code>tags = [projectile, fire]</code>. Modifiers and buff conditions match on tags, so "fire things pierce" applies to anything that acquired <code>fire</code>, however it got there.</p>
+
+        <h3>4. Visual layer binding</h3>
+        <p>The same handler that applies a buff's mechanical effect attaches its visual layer to the same tagged entity. There is no separate "animation for buff X on object Y" step, which is the whole reason the art stays cheap.</p>
+
+        <h3>Buff as data</h3>
+<pre><code># res://buffs/shatter.tres  (Resource, generated or hand-written)
+name        = "Shatter"
+tags_add    = ["shard"]
+modifiers   = [{stat="split_count", layer="add", value=2, tags=["rock"]}]
+on          = "split"
+if          = "source.tags has fire"
+do          = "spawn shard ×2 with tags [projectile, fire, shard]"
+visual      = {layer="emitter", material="ember", tint="#f0a04b"}</code></pre>
+      </section>
+
+      <section id="settings">
+        <div class="sec-eyebrow">Godot</div>
+        <h2>Project settings to lock on day one</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Setting</th><th>Value</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Renderer</td><td><code>gl_compatibility</code> first; benchmark <code>forward_plus</code> and <code>mobile</code> once in phase 0</td><td>Compatibility is the cheapest 2D path and smallest export, but with low-end support relaxed the Vulkan renderers are fair game if they win on the dev PC</td></tr>
+            <tr><td>Texture filter (default)</td><td>Nearest</td><td>Voxel edges stay crisp</td></tr>
+            <tr><td>Stretch mode / aspect</td><td><code>canvas_items</code> / <code>keep</code>, integer scale on</td><td>Consistent pixel size across resolutions</td></tr>
+            <tr><td>Base resolution</td><td>960 × 540</td><td>Locked. 2× to 1080p, 4× to 4K exactly; enough pixels for tiny objects to read</td></tr>
+            <tr><td>Physics ticks</td><td>60, physics interpolation on</td><td>Render rate decoupled from simulation</td></tr>
+            <tr><td>V-Sync</td><td>Off in stress bed, user option in game</td><td>Need raw frame times to measure</td></tr>
+            <tr><td>Max fps</td><td>0 (uncapped) in stress bed</td><td>Same reason</td></tr>
+            <tr><td>Threads</td><td>Multi-threaded rendering on; physics on separate thread on</td><td>Cheap wins on weak CPUs</td></tr>
+            <tr><td>Language</td><td>GDScript first; C# / GDExtension only where the profiler demands</td><td>Iteration speed until proven otherwise</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="open">
+        <div class="sec-eyebrow">Parked</div>
+        <h2>Open decisions</h2>
+        <p>None of these block phase 0. Each gets decided after we've played with the stress bed for a while, because the answers should come from what the density looks like, not from a blank page.</p>
+        <div class="decisions">
+          <div class="decision"><span class="status open">Open</span><p>Name<small>Codename is fine for months. Pick one that describes the feeling of a late run.</small></p></div>
+          <div class="decision"><span class="status open">Open</span><p>Core verb<small>Mine? Smash? Shoot? Dash through? The stress bed's debris shower should suggest which one is most satisfying to spam.</small></p></div>
+          <div class="decision"><span class="status open">Open</span><p>Run length<small>Working assumption: 5–10 minutes. Short enough to try one more build.</small></p></div>
+          <div class="decision"><span class="status open">Open</span><p>Input model<small>Direct control (WASD + aim) vs. idle-with-nudges (Gnorp-style). Direct control raises the fps bar; idle raises the density bar.</small></p></div>
+          <div class="decision"><span class="status open">Open</span><p>Story / theme<small>Only needed once we know the verb. Asteroid mining is the obvious fit for debris and shards; not committed.</small></p></div>
+          <div class="decision"><span class="status open">Open</span><p>Meta-progression<small>Between-run unlocks widen the offer pool vs. pure roguelike. Decide after ten runs of the first mechanic.</small></p></div>
+          <div class="decision"><span class="status locked">Locked</span><p>Godot 4, 2D, Compatibility renderer, baked vox sprites, tag-based compounding systems</p></div>
+        </div>
+      </section>
+
+      <section id="roadmap">
+        <div class="sec-eyebrow">Plan</div>
+        <h2>Roadmap</h2>
+        <div class="roadmap">
+          <div class="phase now"><div class="ph">Phase 0 · now</div><h3>Stress bed</h3><ul><li>Bake one vox guy and three debris shapes</li><li>Spawner with density keys</li><li>MultiMesh swarm, shader-integrated motion</li><li>Six visual layers, toggleable</li><li>Debug overlay + CSV capture</li><li>Pass the 10k / 6-layer / 300 fps row on the dev PC</li></ul></div>
+          <div class="phase"><div class="ph">Phase 1</div><h3>One verb, five buffs</h3><ul><li>Stat resolver, event bus, tags</li><li>One core mechanic (the verb we picked)</li><li>Five hand-written buffs that must combine into at least one surprise</li><li>First playable 3-minute run</li></ul></div>
+          <div class="phase"><div class="ph">Phase 2</div><h3>Generated runs</h3><ul><li>Seeded offer generator, tag-weighted</li><li>20+ buffs, 3 archetype seeds</li><li>Run replay from seed + choices</li><li>Decide name, theme, meta-progression</li></ul></div>
+          <div class="phase"><div class="ph">Phase 3</div><h3>Ship-shaped</h3><ul><li>Menus, settings, save</li><li>Sound design for compounding</li><li>Balance pass on caps and budgets</li><li>Itch build, friends test</li></ul></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+(function(){
+  var c=document.getElementById('cubes'); if(!c) return;
+  var ctx=c.getContext('2d'); var W=c.width,H=c.height;
+  var css=getComputedStyle(document.documentElement);
+  function tok(n){return css.getPropertyValue(n).trim();}
+  function draw(){
+    css=getComputedStyle(document.documentElement);
+    ctx.clearRect(0,0,W,H);
+    var s=22, ox=W/2, oy=H-40;
+    var accent=tok('--accent'), ink2=tok('--ink-2'), line=tok('--line-2'), warm=tok('--warm');
+    // a small stack of isometric cubes, seeded layout so it is the same every load
+    var cubes=[[0,0,0],[1,0,0],[0,1,0],[2,0,0],[0,2,0],[1,1,0],[0,0,1],[1,0,1],[0,1,1],[0,0,2],[3,0,0],[0,3,0],[2,1,0],[1,2,0],[1,1,1]];
+    var hi=[[0,0,2],[1,1,1],[3,0,0]];
+    cubes.sort(function(a,b){return (a[0]+a[1]+a[2]*0.5)-(b[0]+b[1]+b[2]*0.5);});
+    cubes.forEach(function(p){
+      var x=ox+(p[0]-p[1])*s*0.866, y=oy-(p[0]+p[1])*s*0.5-p[2]*s;
+      var isHi=hi.some(function(h){return h[0]===p[0]&&h[1]===p[1]&&h[2]===p[2];});
+      var base=isHi?accent:line, side=isHi?accent:ink2;
+      ctx.globalAlpha=isHi?1:0.55;
+      // top
+      ctx.fillStyle=base;ctx.beginPath();ctx.moveTo(x,y-s);ctx.lineTo(x+s*0.866,y-s*0.5);ctx.lineTo(x,y);ctx.lineTo(x-s*0.866,y-s*0.5);ctx.closePath();ctx.fill();
+      // left
+      ctx.fillStyle=side;ctx.globalAlpha=isHi?0.8:0.35;ctx.beginPath();ctx.moveTo(x-s*0.866,y-s*0.5);ctx.lineTo(x,y);ctx.lineTo(x,y+s);ctx.lineTo(x-s*0.866,y+s*0.5);ctx.closePath();ctx.fill();
+      // right
+      ctx.globalAlpha=isHi?0.6:0.25;ctx.beginPath();ctx.moveTo(x+s*0.866,y-s*0.5);ctx.lineTo(x,y);ctx.lineTo(x,y+s);ctx.lineTo(x+s*0.866,y+s*0.5);ctx.closePath();ctx.fill();
+    });
+    ctx.globalAlpha=1;
+    // one warm spark
+    ctx.fillStyle=warm;ctx.fillRect(ox+s*2.6,oy-s*3.4,6,6);ctx.fillRect(ox+s*3.1,oy-s*3.9,4,4);
+  }
+  draw();
+  if(window.matchMedia){window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);}
+  new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+})();
+</script>
+
+</body></html>

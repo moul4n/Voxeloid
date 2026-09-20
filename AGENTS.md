@@ -1,0 +1,42 @@
+# Working preferences
+
+- Use plain English and short updates. The user's full writing guide is stored in `docs/SKILL.md`; it no longer depends on an external Downloads folder.
+- State the result first. Use concrete words, active voice, and short sentences. Cut filler, praise, marketing language, and repeated summaries. Avoid em dashes, decorative emojis, excessive bold text, and jargon. Report what changed, what was checked, and what remains uncertain.
+- Keep token use low. Use `rg`, bounded line ranges, and scripts that return summaries. Do not read whole source files or raw logs into context.
+- Delegate independent work when the workload warrants it. Pick the lowest available model and effort that can do the work reliably. The lead agent checks findings and changes before accepting them.
+- Avoid duplicate reviews and broad filesystem searches. Limit output at the source.
+- The original archive is `.ignore/voxeloid.zip`. Its extracted baseline is `scratch/voxbench`.
+- Read `scratch/EVALUATION.md` for the initial review and outstanding checks. Do not treat supplied headless timings as GPU performance evidence.
+
+# Project context
+
+- Voxeloid is a Godot game about gathering matter and building stars and worlds in a radial cutaway view.
+- Active development belongs in `game/`. Keep the extracted `scratch/voxbench` baseline unchanged for reference.
+- Current priority: voxel spawning, gravity towards the centre, camera controls, a round player placeholder at the centre, and a clickable foreground black orb.
+- Hydrogen is one voxel per particle. Later elements use larger, more complex voxel shapes and different colour tints. Exact atomic counts are not required. Do not expose later elements as playable progression until requested.
+- Hydrogen is a tiny plain round GPU instance, roughly two world pixels across at starting zoom. The active model is now `game/core/material_field.gd`: 720 mass-conserving radial regions with batched scheduled arrivals, plus `field_renderer.gd` and shaders. The user explicitly requested this scale-first replacement using particle-testing.zip; it supersedes the earlier requirement for individual circle contacts and no radial field. See `docs/SURFACE.md` and `docs/PARTICLE-MODEL-REVIEW.md`. Do not restore per-grain CPU integration for large populations.
+- Material profiles remain in `game/core/elements.gd`: mass, grain_size, gravity_response, repose_slope, surface_friction, flow_rate, damping, impact_spread. Both modes support 1,000,000,000 stored grains. Dev release amounts range from 10 to 500,000. The renderer must keep its shared visual-sample budget at 500,000; never allocate drawing buffers for the logical billion-grain cap. Preserve exact material counts, bounded batch storage, clear/reset, and field-cache invalidation. Run `game/surface_test.gd` for active field changes; `legacy_surface_test.gd` covers only the archived circle solver.
+- Keep the foreground orb separate from the player and independent of camera zoom. Start with no material so the first click has a clear effect.
+- Ambient dust is now active: see docs/AMBIENT_DUST.md. It uses a separate fixed 768-mote world-space pool, never a CPU object per stored grain. Main reserves those 768 slots from the 500,000 total visual budget. Capture adds existing flyby matter directly to loose deposits once; use settled body mass, exclude player/incoming mass, and keep camera changes independent of income. Later stellar-output supply is a multiplier hook, default zero. Test ambient_dust_test.gd and ambient_integration_test.gd when changing it.
+- Playable main enables Sun progression in core/sun_progression.gd; docs/SUN_BALANCE.md is the current numerical authority and docs/SUN_PHASE.md records implementation. Seven fixed mass requirements total 976,958 and map to 1,000 physical SMU; ignition at 75 SMU. Consume only the current requirement; preserve excess loose and proportional dev-partial credit. Player cap 15. Outer actions reveal four stellar zones; inner densification stays separate. Keep player/body mass and heat separate. Talent/reward/He discovery hooks remain incomplete; spin defaults zero. Run sun_progression_test.gd and rendered sun_ui_test.gd.
+- Arrivals hand off to a thin GPU rim overlay (at most 2,048 samples inside the shared 500,000 drawing budget). Keep surface sampling independent of draw count to avoid the three-o'clock birth seam. Bulk angular lookup must use mesh coordinates, not vertically reversed QuadMesh UVs. Run arrival_rim_test.gd rendered when changing this handoff; conserve logical counts and retire/reset visual activity.
+- Pressure compaction is authorised: deeper material packs more tightly under the weight above it, with per-element and per-stage tuning and compression colour. Keep CPU surface volume and GPU radial distribution consistent. See docs/COMPACTION.md and run game/compaction_test.gd for these changes. Heat/fusion and mixed-element layers are future work.
+- Outer loose-material compaction must stay player-triggered through Compact outer matter. Inner planet/sun-core densification may automate only after its player upgrade is granted and enabled. The player core is separate from the body core, inner mantle, outer mantle and shallow surface. Dev Ctrl-click bypasses readiness/unlocks without inventing matter. Preserve count across loose, incoming and all body layers; construction can consume only loose deposited grains. Run core_layer_test.gd, layer_ui_test.gd, nested_layer_test.gd and nested_layer_ui_test.gd. Restrict shudder/flicker to the converting section; other shells may shift position while retaining their own area and count. Dense loose material is not a formed layer until the player acts.
+- The original design lives in `scratch/voxbench/docs/voxeloid-design.html`. The older speed and phase-zero documents contain assumptions that no longer match it.
+- The baseline is a rendering benchmark, not a game engine. Its capture integrity needs fixes before using it for performance decisions. See the evaluation for details.
+- Build and verify small playable steps. Do not expand into heat, layer merging, upgrades, save/load, or all three acts without a task that calls for them.
+
+- Development cheats are available only through `start-dev.bat` / `--dev`. Any future feature with a purchase or unlock must provide a Ctrl-click path that grants it for free in dev mode. Normal play must retain its requirements. See `docs/DEVELOPMENT.md`. Dev Ctrl-click on the spawn orb selects an element; Ctrl-wheel changes the spawn amount. Keep these gestures from also spawning or zooming.
+
+# Running and checking
+
+- Launch from the repository root using `start.bat`. The active Godot project is `game/project.godot`.
+- Godot 4.7.2 is configured in `godot.local.txt`. Its executable is `D:\Users\Jason\Downloads\Godot_v4.7.2-stable_win64.exe\Godot_v4.7.2-stable_win64_console.exe`. The launcher also supports `GODOT_EXE`; do not download another engine without first checking the configured one.
+- Blender 5.2.0 LTS is available at `C:\Program Files\Blender Foundation\Blender 5.2\blender.exe`. The user authorises using Blender for voxel, creature, and other game art when needed. Keep source art and exported assets together with reproducible export steps.
+- Engine import, physics smoke tests, and rendered input checks passed on 2026-09-20 using Godot 4.7.2 and an RTX 4070. This was correctness testing, not a performance benchmark.
+- For restricted test runs, set process-local `APPDATA` to `scratch/checks/appdata` so Godot can write test settings. A certificate-store warning occurred in the sandbox; local rendering and tests still passed.
+- Use headless import and focused physics tests for correctness. Use a rendered run for shader and visual checks. Do not claim headless timings prove GPU performance.
+- Keep generated `.godot` files and local test logs out of version control. Update `docs/PROJECT.md` with current controls, verified results, and limits when implementation changes.
+- Start Codex at this repository root so these instructions are discovered. Official behaviour: https://learn.chatgpt.com/docs/agent-configuration/agents-md
+
+- For scalability work use game/performance_test.gd with --grains=100000 or --grains=500000. Report actual GPU instance counts, camera zoom and scenario with timings. Arrival and deposited objects use an aggregate-field approximation; do not describe them as hundreds of thousands of exact collision bodies. New research archive: scratch/particle-testing/voxbench.

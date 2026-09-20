@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Phase 0 Build Plan</title>
+<style>:root{color-scheme:light dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head><body>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#f3f4f8; --paper:#ffffff; --ink:#151a26; --ink-2:#4a5266; --ink-3:#8a91a3;
+    --line:#dcdfe8; --line-2:#c6cad6;
+    --accent:#1f4fd8; --accent-ink:#ffffff; --accent-soft:#e6ecfc;
+    --warm:#d6791a; --warm-soft:#fbeedc;
+    --ok:#1c8a5a; --ok-soft:#e1f3ea; --code-bg:#eef0f6;
+    --shadow:0 1px 0 rgba(21,26,38,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#111420; --paper:#181c2a; --ink:#e9ebf3; --ink-2:#b1b7c8; --ink-3:#767d92;
+      --line:#272c3d; --line-2:#353b50;
+      --accent:#6f95ff; --accent-ink:#0d1220; --accent-soft:#1c2748;
+      --warm:#f0a04b; --warm-soft:#3a2a15;
+      --ok:#4fc58d; --ok-soft:#173327; --code-bg:#12151f;
+      --shadow:none;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#111420; --paper:#181c2a; --ink:#e9ebf3; --ink-2:#b1b7c8; --ink-3:#767d92;
+    --line:#272c3d; --line-2:#353b50;
+    --accent:#6f95ff; --accent-ink:#0d1220; --accent-soft:#1c2748;
+    --warm:#f0a04b; --warm-soft:#3a2a15;
+    --ok:#4fc58d; --ok-soft:#173327; --code-bg:#12151f;
+    --shadow:none;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.6;padding-inline:16px;padding-block:0 64px;}
+  a{color:var(--accent)}
+  h1,h2,h3,h4{font-family:"Chakra Petch","IBM Plex Sans",system-ui,sans-serif;text-wrap:balance;line-height:1.15;margin:0}
+  h1{font-size:clamp(34px,6vw,58px);font-weight:700;letter-spacing:-.01em}
+  h2{font-size:26px;font-weight:600;margin-block:0 14px}
+  h3{font-size:17px;font-weight:600;margin-block:22px 8px}
+  h4{font-size:15px;font-weight:600;margin-block:16px 6px;font-family:"IBM Plex Sans",sans-serif}
+  p{margin:0 0 14px}
+  code{font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.9em;background:var(--code-bg);padding:1px 5px;border-radius:3px}
+  pre{font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.5;background:var(--code-bg);border:1px solid var(--line);padding:14px 16px;overflow-x:auto;margin:0 0 16px;border-radius:4px;tab-size:4}
+  pre code{background:none;padding:0}
+  kbd{font-family:"IBM Plex Mono",monospace;font-size:12px;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:3px;padding:0 5px;background:var(--paper)}
+
+  .wrap{max-width:1080px;margin:0 auto}
+  header{padding-block:40px 28px;border-bottom:1px solid var(--line-2)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
+  .lede{font-size:18px;color:var(--ink-2);max-width:62ch;margin-top:14px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 20px;font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink-3);padding-block:14px;border-bottom:1px solid var(--line)}
+  .meta b{color:var(--ink);font-weight:500}
+
+  .layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px;margin-top:32px}
+  nav{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);align-self:start;font-size:13.5px}
+  nav .eyebrow{margin-bottom:8px}
+  nav a{display:block;color:var(--ink-2);text-decoration:none;padding:5px 0 5px 12px;border-left:2px solid var(--line)}
+  nav a:hover,nav a:focus-visible{color:var(--ink);border-left-color:var(--accent);outline:none}
+  main{min-width:0}
+  section{padding-block:12px 36px;border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:0}
+  section > p, section > ul, section > ol, section h3, section h4{max-width:70ch}
+  ul,ol{padding-left:20px;margin:0 0 14px}
+  li{margin-bottom:6px}
+  .sec-eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+
+  table{border-collapse:collapse;width:100%;font-size:14.5px;margin-block:8px 18px}
+  .tbl{overflow-x:auto}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:500;border-bottom:1px solid var(--line-2)}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",monospace;font-size:13.5px;white-space:nowrap}
+  td.m{font-family:"IBM Plex Mono",monospace;font-size:13px;white-space:nowrap}
+  tr.target td{background:var(--accent-soft)}
+
+  .callout{background:var(--paper);border-left:3px solid var(--accent);padding:14px 18px;margin-block:10px 18px;box-shadow:var(--shadow);max-width:74ch}
+  .callout.warm{border-left-color:var(--warm)}
+  .callout.ok{border-left-color:var(--ok)}
+  .callout p:last-child{margin-bottom:0}
+
+  .steps{counter-reset:step;display:grid;gap:14px;margin-block:8px 18px}
+  .step{display:grid;grid-template-columns:44px 1fr;gap:16px;background:var(--paper);border:1px solid var(--line);padding:16px 18px 14px;box-shadow:var(--shadow)}
+  .step::before{counter-increment:step;content:counter(step);font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:26px;line-height:1;color:var(--accent);padding-top:2px}
+  .step h3{margin-top:0;font-size:16px}
+  .step p{font-size:15px;margin-bottom:8px}
+  .step ul{font-size:14.5px;color:var(--ink-2);margin-bottom:8px}
+  .done{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ok);background:var(--ok-soft);display:inline-block;padding:3px 9px;border-radius:2px;margin-top:4px}
+  .done::before{content:"done when · "}
+
+  .tree{font-family:"IBM Plex Mono",monospace;font-size:13px;line-height:1.55;background:var(--code-bg);border:1px solid var(--line);padding:14px 16px;overflow-x:auto;margin:0 0 16px;border-radius:4px;white-space:pre}
+  .tree i{font-style:normal;color:var(--ink-3)}
+
+  .keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-block:8px 18px}
+  .key{background:var(--paper);padding:10px 14px;font-size:14px;display:flex;gap:12px;align-items:baseline}
+  .key kbd{flex:none;min-width:38px;text-align:center}
+
+  .check{list-style:none;padding:0;margin-block:8px 18px;max-width:70ch}
+  .check li{display:grid;grid-template-columns:20px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);margin:0}
+  .check li::before{content:"";width:14px;height:14px;border:1.5px solid var(--line-2);border-radius:2px;margin-top:5px}
+
+  @media (max-width:780px){
+    .layout{grid-template-columns:1fr;gap:24px}
+    nav{position:static;display:flex;flex-wrap:wrap;gap:4px 14px}
+    nav .eyebrow{width:100%}
+    nav a{border-left:0;padding:4px 0}
+    .step{grid-template-columns:32px 1fr;gap:10px}
+  }
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Vox speed game · phase 0 · companion to the Vox Speed Bible</div>
+    <h1>Phase 0 Build Plan</h1>
+    <p class="lede">Everything needed to sit down at the dev PC and build the stress bed in order, with a metrics recorder that leaves a compact, comparable record of every run so later changes are measured against a baseline rather than a feeling.</p>
+  </header>
+  <div class="meta">
+    <span>Godot <b>4.4+ (4.5 if stable)</b></span>
+    <span>Base res <b>960 × 540</b></span>
+    <span>Bar <b>10,000 objects · 6 layers · ≥ 300 fps</b></span>
+    <span>Status <b>waiting on dev PC</b></span>
+  </div>
+
+  <div class="layout">
+    <nav aria-label="Sections">
+      <div class="eyebrow">Contents</div>
+      <a href="#targets">Targets</a>
+      <a href="#layout">Project layout</a>
+      <a href="#order">Build order</a>
+      <a href="#swarm">Swarm renderer</a>
+      <a href="#layers">Visual layers</a>
+      <a href="#metrics">Metrics recorder</a>
+      <a href="#protocol">Benchmark protocol</a>
+      <a href="#compare">Comparing runs</a>
+      <a href="#keys">Controls</a>
+      <a href="#dayone">Day-one checklist</a>
+      <a href="#risks">Risks &amp; plan B</a>
+    </nav>
+
+    <main>
+      <section id="targets">
+        <div class="sec-eyebrow">Targets</div>
+        <h2>What passing looks like</h2>
+        <p>Primary target is the dev PC. Low-end support is not a goal, but the recorder captures the GPU name in every run so a laptop check later is a five-minute job, not a re-plan.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Scenario id</th><th class="n">Swarm</th><th class="n">Actors</th><th class="n">Layers</th><th class="n">Pass: p99 frame</th><th class="n">≈ fps</th></tr></thead>
+          <tbody>
+            <tr><td class="m">idle</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">≤ 1.0 ms</td><td class="n">1000+</td></tr>
+            <tr><td class="m">mid</td><td class="n">2,000</td><td class="n">200</td><td class="n">3</td><td class="n">≤ 2.0 ms</td><td class="n">500</td></tr>
+            <tr class="target"><td class="m">late</td><td class="n">10,000</td><td class="n">500</td><td class="n">6</td><td class="n">≤ 3.33 ms</td><td class="n">300</td></tr>
+            <tr><td class="m">absurd</td><td class="n">50,000</td><td class="n">1,000</td><td class="n">6</td><td class="n">≤ 6.94 ms</td><td class="n">144</td></tr>
+            <tr><td class="m">spike</td><td class="n">0 → 10,000 in one frame</td><td class="n">0</td><td class="n">6</td><td class="n">worst frame ≤ 8 ms</td><td class="n">no visible hitch</td></tr>
+          </tbody>
+        </table></div>
+        <p>Pass/fail is judged on the <strong>p99 frame time</strong>, not average fps. Average hides hitches and hitches are what a fast game can't have. The <code>spike</code> scenario exists because burst-spawning is exactly what a compounding buff does.</p>
+      </section>
+
+      <section id="layout">
+        <div class="sec-eyebrow">Structure</div>
+        <h2>Project layout</h2>
+        <p>Small on purpose. Everything in <code>bench/</code> is throwaway once phase 1 starts; everything in <code>core/</code> and <code>render/</code> is meant to survive into the game.</p>
+<div class="tree">res://
+├── project.godot
+├── core/
+│   ├── metrics.gd              <i>autoload · ring buffer + CSV/JSON writer</i>
+│   └── seeded_rng.gd           <i>autoload · one RNG, seed from CLI or key</i>
+├── render/
+│   ├── swarm.gd                <i>MultiMeshInstance2D wrapper, spawn ring</i>
+│   ├── swarm.gdshader          <i>vertex-integrated motion + layers</i>
+│   ├── rig.gd                  <i>hero part rig · procedural tweens</i>
+│   └── layers.gd               <i>visual layer stack (tint, glow, pulse…)</i>
+├── art/
+│   ├── vox/                    <i>source .vox files, one per part</i>
+│   ├── bake/bake.py            <i>Blender headless: vox → atlas + json</i>
+│   └── atlas/                  <i>baked png + json, imported nearest</i>
+├── bench/
+│   ├── stress.tscn             <i>the only scene</i>
+│   ├── stress.gd               <i>scenario runner + key bindings</i>
+│   ├── overlay.gd              <i>debug HUD</i>
+│   └── scenarios.json          <i>idle / mid / late / absurd / spike</i>
+└── tools/
+    └── compare.py              <i>diff two runs, flag regressions</i>
+
+user://bench/                   <i>runtime output, one folder per run</i>
+└── 2026-10-04_2113_late_a1b2c3/
+    ├── summary.json
+    └── frames.csv</div>
+      </section>
+
+      <section id="order">
+        <div class="sec-eyebrow">Sequence</div>
+        <h2>Build order</h2>
+        <p>Each step has a "done when" that's observable, and the recorder comes <em>second</em>, before any rendering work, so every rendering step is measured from its first commit.</p>
+        <div class="steps">
+          <div class="step"><div>
+            <h3>Project skeleton and settings</h3>
+            <p>New Godot 4.4+ project, Compatibility renderer, 960×540 base, <code>canvas_items</code> stretch with integer scaling, nearest filtering default, physics 60 Hz with interpolation on, V-Sync off, max fps 0, multithreaded rendering on. Commit as the baseline. Git from the first minute; the recorder embeds the short hash in every run.</p>
+            <span class="done">an empty scene runs and the window title shows the git hash</span>
+          </div></div>
+          <div class="step"><div>
+            <h3>Metrics recorder</h3>
+            <p>Autoload <code>Metrics</code> per the spec below. Capture per-frame times into a preallocated ring buffer, write <code>frames.csv</code> and <code>summary.json</code> on stop. No UI beyond a "REC" indicator.</p>
+            <span class="done">running the empty scene for 10 s produces a summary with p50/p95/p99 near 0 and the right GPU name</span>
+          </div></div>
+          <div class="step"><div>
+            <h3>Debug overlay</h3>
+            <p>Top-left monospace panel: fps, frame ms (last / p99 rolling 1 s), process ms, physics ms, draw calls, live swarm count, live actor count, layer mask, scenario name, seed, git hash. Updated 10× a second, not every frame, so it doesn't distort what it measures.</p>
+            <span class="done">overlay cost itself is under 0.05 ms (toggle it and compare)</span>
+          </div></div>
+          <div class="step"><div>
+            <h3>Bake one vox guy and three debris shapes</h3>
+            <p>Five parts for the guy, three chunks. Run <code>bake.py</code>, get one atlas at 2× then nearest-downsampled, plus a JSON of frame rects. Import with filter off, mipmaps off.</p>
+            <span class="done">the atlas shows in Godot with crisp voxel edges at 2× window scale</span>
+          </div></div>
+          <div class="step"><div>
+            <h3>Hero rig</h3>
+            <p><code>rig.gd</code> builds a parts tree from the JSON and drives idle / walk / swing with tweens on rotation, scale and offset. No AnimationPlayer.</p>
+            <span class="done">the guy walks and swings; the <code>idle</code> scenario passes</span>
+          </div></div>
+          <div class="step"><div>
+            <h3>Swarm renderer, CPU path first</h3>
+            <p>One <code>MultiMeshInstance2D</code>, quad mesh, atlas texture, <code>use_custom_data</code> on. Spawn ring buffer; a GDScript loop integrating position each frame. This is the deliberately slow version so we have a number to beat.</p>
+            <span class="done">the <code>mid</code> scenario records a baseline, pass or fail</span>
+          </div></div>
+          <div class="step"><div>
+            <h3>Swarm renderer, GPU path</h3>
+            <p>Move integration into <code>swarm.gdshader</code>: custom data carries spawn time, velocity and seed; the vertex shader computes position, gravity, bounce and fade from <code>TIME</code>. CPU only writes on spawn and recycles dead slots.</p>
+            <span class="done">the <code>late</code> scenario passes at ≥ 300 fps p99; <code>absurd</code> holds ≥ 144</span>
+          </div></div>
+          <div class="step"><div>
+            <h3>Pooled actors</h3>
+            <p>Pool of 1,000 simple <code>Node2D</code>+<code>Sprite2D</code> actors with <code>Area2D</code> overlap, spawned by scenario. This is the tier that will hold enemies and projectiles later, so its cost per instance is the number we care about.</p>
+            <span class="done">500 actors add ≤ 0.6 ms to the <code>late</code> scenario</span>
+          </div></div>
+          <div class="step"><div>
+            <h3>Visual layer stack</h3>
+            <p><code>layers.gd</code> applies the six layers via a bitmask to swarm (shader uniforms) and actors (modulate, tween, child particles). Keys <kbd>1</kbd>–<kbd>6</kbd> toggle; the mask is in every summary.</p>
+            <span class="done">each layer's marginal cost is recorded in a table in this doc</span>
+          </div></div>
+          <div class="step"><div>
+            <h3>Scenario runner and spike test</h3>
+            <p><code>stress.gd</code> reads <code>scenarios.json</code>, runs the chosen one (or all, in sequence) with a fixed seed, 3 s warm-up, 10 s capture, auto-stop. Add <kbd>F5</kbd> for the full suite.</p>
+            <span class="done">one keypress produces five run folders and <code>compare.py</code> reads them</span>
+          </div></div>
+          <div class="step"><div>
+            <h3>Renderer shoot-out</h3>
+            <p>Run the suite under <code>gl_compatibility</code>, <code>mobile</code> and <code>forward_plus</code>. Pick the winner on <code>late</code> p99; keep Compatibility unless another is clearly faster.</p>
+            <span class="done">renderer choice written into the Bible's settings table with the numbers</span>
+          </div></div>
+        </div>
+      </section>
+
+      <section id="swarm">
+        <div class="sec-eyebrow">Rendering</div>
+        <h2>Swarm renderer design</h2>
+        <p>The swarm is where 10,000 to 50,000 things live, so it gets exactly one draw call per atlas and no per-object nodes. The CPU's only job is to write a slot when something spawns.</p>
+        <h3>Per-instance data</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Where</th><th>Field</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td class="m">transform</td><td>origin</td><td>Spawn position. Never updated after spawn on the GPU path.</td></tr>
+            <tr><td class="m">color</td><td>rgba</td><td>Tint from the strongest buff; alpha unused (fade is computed).</td></tr>
+            <tr><td class="m">custom.r</td><td>t0</td><td>Spawn time in seconds (<code>Time.get_ticks_msec()/1000</code>, same clock as the shader's <code>TIME</code> uniform we pass in).</td></tr>
+            <tr><td class="m">custom.g</td><td>vx</td><td>Initial velocity x, pixels/s.</td></tr>
+            <tr><td class="m">custom.b</td><td>vy</td><td>Initial velocity y, pixels/s.</td></tr>
+            <tr><td class="m">custom.a</td><td>seed · frame</td><td>Packed: 8-bit atlas frame index + 8-bit lifetime tenths + 16-bit seed for wobble phase.</td></tr>
+          </tbody>
+        </table></div>
+        <h3>Vertex shader sketch</h3>
+<pre><code>shader_type canvas_item;
+
+uniform float now;            // set from script each frame
+uniform float gravity = 900.0;
+uniform float floor_y = 520.0;
+uniform int   layer_mask = 0; // bit 0 tint · 1 glow · 2 pulse · 3 wobble · 4 trail · 5 emit
+uniform vec4  glow_col : source_color = vec4(1.0, 0.63, 0.29, 1.0);
+
+varying float v_age01;
+varying flat int v_frame;
+
+void vertex() {
+    vec4 d = INSTANCE_CUSTOM;
+    float t  = max(now - d.r, 0.0);
+    float packed = d.a;
+    int   frame  = int(mod(packed, 256.0));
+    float life   = floor(mod(packed / 256.0, 256.0)) * 0.1;
+    float seed   = floor(packed / 65536.0) / 65535.0;
+
+    float age01 = clamp(t / max(life, 0.01), 0.0, 1.0);
+    v_age01 = age01; v_frame = frame;
+
+    // ballistic with one cheap floor bounce
+    vec2 p = vec2(d.g * t, d.b * t + 0.5 * gravity * t * t);
+    float local_floor = floor_y - (MODEL_MATRIX * vec4(0,0,0,1)).y;
+    if (p.y > local_floor) { p.y = local_floor - (p.y - local_floor) * 0.35; }
+
+    float s = 1.0;
+    if ((layer_mask & 4) != 0) s += 0.15 * sin(now * 9.0 + seed * 6.283);
+    if ((layer_mask & 8) != 0) VERTEX.x += 1.5 * sin(now * 14.0 + seed * 6.283 + VERTEX.y * 0.3);
+    VERTEX = VERTEX * s + p;
+    if (age01 >= 1.0) VERTEX = vec2(1e6); // dead: push off-screen, slot free
+}
+
+void fragment() {
+    // atlas frame lookup from v_frame, then:
+    vec4 c = texture(TEXTURE, UV);
+    if ((layer_mask & 1) != 0) c.rgb *= COLOR.rgb;
+    if ((layer_mask & 2) != 0) c.rgb += glow_col.rgb * 0.35 * step(0.5, c.a);
+    c.a *= 1.0 - smoothstep(0.7, 1.0, v_age01);
+    COLOR = c;
+}</code></pre>
+        <p>Dead instances are pushed far off-screen rather than rebuilt, so the buffer never shrinks; a free-list on the CPU side hands out slots. Spawning 10,000 in one frame is 10,000 <code>set_instance_custom_data</code> calls, which is why the <code>spike</code> scenario exists: if that hurts, batch-write via <code>MultiMesh.buffer</code> as one <code>PackedFloat32Array</code> instead.</p>
+        <div class="callout warm"><p><strong>Watch the clock.</strong> The shader's built-in <code>TIME</code> and the script's tick clock drift apart. Pass <code>now</code> as a uniform every frame from the same source used to stamp <code>t0</code>. This is the bug that makes swarms jitter and it's invisible at low counts.</p></div>
+      </section>
+
+      <section id="layers">
+        <div class="sec-eyebrow">Layers</div>
+        <h2>Visual layers under test</h2>
+        <p>Each layer is one bit; the bench toggles them individually so the marginal cost of each is known. Fill in the last two columns on the dev PC.</p>
+        <div class="tbl"><table>
+          <thead><tr><th class="n">Bit</th><th>Layer</th><th>Swarm implementation</th><th>Actor implementation</th><th class="n">Cost @ late</th><th class="n">Keep?</th></tr></thead>
+          <tbody>
+            <tr><td class="n">1</td><td>Tint</td><td>COLOR multiply</td><td><code>modulate</code></td><td class="n">—</td><td class="n">—</td></tr>
+            <tr><td class="n">2</td><td>Glow</td><td>Additive on opaque texels</td><td>Second Sprite2D, additive blend</td><td class="n">—</td><td class="n">—</td></tr>
+            <tr><td class="n">4</td><td>Pulse</td><td>Scale in vertex()</td><td>Tween on scale, seeded phase</td><td class="n">—</td><td class="n">—</td></tr>
+            <tr><td class="n">8</td><td>Wobble</td><td>Vertex offset by <code>now</code>+seed</td><td>Shader on Sprite2D</td><td class="n">—</td><td class="n">—</td></tr>
+            <tr><td class="n">16</td><td>Trail</td><td>Second MultiMesh of ghosts, 3 per live instance, <code>t0</code> offset</td><td>Line2D, 6 points</td><td class="n">—</td><td class="n">—</td></tr>
+            <tr><td class="n">32</td><td>Emitter</td><td>One shared GPUParticles2D fed spawn positions</td><td>Child GPUParticles2D, shared material</td><td class="n">—</td><td class="n">—</td></tr>
+          </tbody>
+        </table></div>
+        <p>Trail is the expected expensive one on swarm (it triples instance count). If it fails the budget, the fallback is a motion-blur shader on the same quad (stretch along velocity) which costs nothing.</p>
+      </section>
+
+      <section id="metrics">
+        <div class="sec-eyebrow">Recorder</div>
+        <h2>Metrics recorder spec</h2>
+        <p>Compact by design: one summary you can paste into a chat, plus the raw frame times for when the summary says something surprising. Every run is self-describing, so a folder from three months ago still means something.</p>
+
+        <h3>Behaviour</h3>
+        <ul>
+          <li>Preallocated <code>PackedFloat32Array</code> of 6,000 frames (10 s at up to 600 fps). Recording never allocates.</li>
+          <li>Captures per frame: total frame time, process time, physics time, and Godot's <code>RenderingServer.get_rendering_info()</code> counters (draw calls, primitives) sampled once per second, not per frame.</li>
+          <li>Warm-up frames are recorded but excluded from stats (<code>warmup_s</code> in the summary says how many).</li>
+          <li>Writes on stop, never during; output is <code>user://bench/&lt;date&gt;_&lt;time&gt;_&lt;scenario&gt;_&lt;githash&gt;/</code>.</li>
+          <li>Optional <code>--bench=late --seed=7 --quit</code> command-line args so a run can be scripted from a terminal with no keypresses.</li>
+        </ul>
+
+        <h3>summary.json</h3>
+<pre><code>{
+  "schema": 1,
+  "run_id": "2026-10-04_2113_late_a1b2c3",
+  "scenario": "late",
+  "seed": 7,
+  "git": "a1b2c3",
+  "label": "gpu-path-first-try",
+  "godot": "4.4.1.stable",
+  "renderer": "gl_compatibility",
+  "gpu": "NVIDIA GeForce RTX 4070",
+  "cpu": "AMD Ryzen 7 7800X3D",
+  "resolution": [960, 540],
+  "window_scale": 2,
+  "vsync": false,
+  "layers": 63,
+  "swarm_max": 10000,
+  "actors": 500,
+  "warmup_s": 3.0,
+  "capture_s": 10.0,
+  "frames": 3412,
+  "frame_ms":   { "avg": 2.93, "p50": 2.81, "p95": 3.40, "p99": 3.71, "max": 6.20, "low1pct_fps": 271 },
+  "process_ms": { "avg": 1.02, "p99": 1.40 },
+  "physics_ms": { "avg": 0.18, "p99": 0.31 },
+  "draw_calls": { "avg": 14, "max": 18 },
+  "primitives": { "avg": 21550 },
+  "live_swarm": { "avg": 9840, "max": 10000 },
+  "live_actors": 500,
+  "pass": false,
+  "pass_rule": "p99_frame_ms <= 3.33"
+}</code></pre>
+
+        <h3>frames.csv</h3>
+<pre><code>frame,t_ms,frame_ms,process_ms,physics_ms,live_swarm
+0,0.00,2.84,1.01,0.17,9812
+1,2.84,2.79,0.99,0.17,9820
+...</code></pre>
+        <p>Around 120 KB per run at 300 fps. Small enough to commit if a run is worth keeping as a reference; otherwise <code>user://bench</code> is disposable.</p>
+
+        <h3>Core of metrics.gd</h3>
+<pre><code>extends Node
+## Autoload "Metrics". Ring buffer of frame times; writes CSV + JSON on stop.
+
+const CAP := 6000
+var _frame := PackedFloat32Array()
+var _proc  := PackedFloat32Array()
+var _phys  := PackedFloat32Array()
+var _live  := PackedInt32Array()
+var _n := 0
+var recording := false
+var meta := {}          # filled by the scenario runner before start()
+
+func _ready() -> void:
+    _frame.resize(CAP); _proc.resize(CAP); _phys.resize(CAP); _live.resize(CAP)
+
+func start(scenario: String, extra: Dictionary) -> void:
+    _n = 0
+    meta = extra.duplicate()
+    meta["scenario"] = scenario
+    meta["git"] = _git_hash()
+    meta["godot"] = Engine.get_version_info().string
+    meta["renderer"] = ProjectSettings.get_setting("rendering/renderer/rendering_method")
+    meta["gpu"] = RenderingServer.get_video_adapter_name()
+    meta["cpu"] = OS.get_processor_name()
+    recording = true
+
+func _process(_dt: float) -> void:
+    if not recording or _n >= CAP: return
+    _frame[_n] = Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0 \
+               + Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0
+    _proc[_n]  = Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
+    _phys[_n]  = Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0
+    _live[_n]  = meta.get("live_swarm_now", 0)
+    _n += 1
+
+func stop() -> Dictionary:
+    recording = false
+    var skip := int(meta.get("warmup_s", 3.0) * (_n / meta.get("capture_total_s", 13.0)))
+    var s := _stats(_frame, skip)
+    var out := meta.duplicate()
+    out["frames"] = _n - skip
+    out["frame_ms"] = s
+    out["process_ms"] = _stats(_proc, skip)
+    out["physics_ms"] = _stats(_phys, skip)
+    out["pass"] = s["p99"] <= meta.get("pass_p99_ms", 3.33)
+    _write(out)
+    return out
+
+func _stats(a: PackedFloat32Array, skip: int) -> Dictionary:
+    var v := a.slice(skip, _n); v.sort()
+    var n := v.size()
+    var sum := 0.0
+    for x in v: sum += x
+    var low := v.slice(int(n * 0.99), n)   # worst 1% frames → 1% low fps
+    var lsum := 0.0
+    for x in low: lsum += x
+    return {
+        "avg": sum / n, "p50": v[n / 2], "p95": v[int(n * 0.95)],
+        "p99": v[int(n * 0.99)], "max": v[n - 1],
+        "low1pct_fps": 1000.0 / (lsum / max(low.size(), 1))
+    }</code></pre>
+        <p><code>_write()</code> makes the run folder, dumps <code>JSON.stringify(out, "  ")</code> and streams the CSV with a <code>FileAccess</code>. <code>_git_hash()</code> reads <code>.git/HEAD</code> and the ref it points at; if there's no repo it returns <code>"nogit"</code> and the overlay turns the hash red so you notice.</p>
+      </section>
+
+      <section id="protocol">
+        <div class="sec-eyebrow">Procedure</div>
+        <h2>Benchmark protocol</h2>
+        <p>The point of the protocol is that two runs a month apart are comparable. Anything that changes between runs must be in the summary; anything that isn't in the summary must be held constant.</p>
+        <ol>
+          <li>Close browsers and anything with a GPU overlay. Plug in the laptop if it is one. Wait for the machine to idle.</li>
+          <li>Window at exactly 2× (1920×1080), not fullscreen borderless, not maximised. Same monitor each time.</li>
+          <li>Commit first. The hash in the summary must point at the code that ran.</li>
+          <li>Press <kbd>F5</kbd> (full suite) or <kbd>F6</kbd> (current scenario only). Do not touch the mouse during capture.</li>
+          <li>Each scenario: 3 s warm-up, 10 s capture, 1 s cool-down. Suite is about 75 s.</li>
+          <li>Run the suite <strong>three times</strong>. Keep the median <code>late</code> p99 as the number for that commit. If the three disagree by more than 8%, something is running in the background; start again.</li>
+          <li>Give the run a label with <kbd>L</kbd> before starting (e.g. <code>gpu-path</code>, <code>trail-ghosts</code>) so folders read like a changelog.</li>
+          <li>Copy the <code>late</code> summary line into <code>BENCH.md</code> in the repo: date, hash, label, p99, pass. One line per commit tested. That file is the project's performance history.</li>
+        </ol>
+        <div class="callout ok"><p><strong>Reference runs.</strong> The first passing <code>late</code> run gets its whole folder committed under <code>bench/reference/</code>. <code>compare.py</code> uses it as the default baseline, so from then on any run answers "better or worse than the day it first passed?"</p></div>
+      </section>
+
+      <section id="compare">
+        <div class="sec-eyebrow">Tooling</div>
+        <h2>Comparing runs</h2>
+        <p><code>tools/compare.py</code> takes two run folders (or one and the reference) and prints a compact diff. Regression threshold is 5% on p99; it exits non-zero on regression so it can gate a commit hook later if that ever seems worth it.</p>
+<pre><code>$ python tools/compare.py user://bench/2026-10-04_2113_late_a1b2c3
+                       reference     this run     delta
+  frame p50 ms            2.61         2.81       +7.7%  ▲
+  frame p95 ms            3.02         3.40      +12.6%  ▲
+  frame p99 ms            3.19         3.71      +16.3%  ▲  REGRESSION
+  frame max ms            5.80         6.20       +6.9%
+  1% low fps               298          271       -9.1%
+  process ms p99          1.31         1.40       +6.9%
+  draw calls avg            14           14        0.0%
+  live swarm avg          9871         9840       -0.3%
+  layers                    63           63
+  gpu                   RTX 4070     RTX 4070
+  git                     9f8e7d       a1b2c3
+  label                 first-pass    trail-ghosts
+
+  verdict: REGRESSION on p99 (+16.3% > 5%)</code></pre>
+        <p>Under 60 lines of Python, reads the two JSON files, nothing else. A <code>--all</code> flag walks every folder in <code>user://bench</code> and prints one row per run, sorted by date, which is the quick "how has this month gone" view.</p>
+      </section>
+
+      <section id="keys">
+        <div class="sec-eyebrow">Bench controls</div>
+        <h2>Keys</h2>
+        <div class="keys">
+          <div class="key"><kbd>F5</kbd><span>Run full suite (idle → mid → late → absurd → spike), record each</span></div>
+          <div class="key"><kbd>F6</kbd><span>Run current scenario only, record</span></div>
+          <div class="key"><kbd>F7</kbd><span>Toggle recording manually (free-play capture)</span></div>
+          <div class="key"><kbd>F8</kbd><span>Open the bench output folder</span></div>
+          <div class="key"><kbd>Tab</kbd><span>Cycle scenario without running</span></div>
+          <div class="key"><kbd>1</kbd>–<kbd>6</kbd><span>Toggle visual layer bit</span></div>
+          <div class="key"><kbd>0</kbd><span>All layers off / all on</span></div>
+          <div class="key"><kbd>Q</kbd>/<kbd>W</kbd>/<kbd>E</kbd>/<kbd>R</kbd><span>Spawn 100 / 1k / 10k / 50k swarm now (spike by hand)</span></div>
+          <div class="key"><kbd>A</kbd>/<kbd>S</kbd><span>Add 100 actors / clear actors</span></div>
+          <div class="key"><kbd>G</kbd><span>Switch swarm CPU path ↔ GPU path (recorded in summary)</span></div>
+          <div class="key"><kbd>H</kbd><span>Toggle overlay</span></div>
+          <div class="key"><kbd>L</kbd><span>Set run label</span></div>
+          <div class="key"><kbd>C</kbd><span>Clear everything</span></div>
+          <div class="key"><kbd>Esc</kbd><span>Quit</span></div>
+        </div>
+      </section>
+
+      <section id="dayone">
+        <div class="sec-eyebrow">Dev PC</div>
+        <h2>Day-one checklist</h2>
+        <p>In this order. The first three take twenty minutes and mean every later number is trustworthy.</p>
+        <ul class="check">
+          <li><span>Install Godot 4.4+ standard build (not .NET, unless the C# fallback becomes necessary). Note the exact version.</span></li>
+          <li><span>Install Blender 4.x and the MagicaVoxel importer add-on for the bake script. Confirm <code>blender --background --python art/bake/bake.py</code> runs.</span></li>
+          <li><span>Install MagicaVoxel. Set the default palette to the 32-colour ramp and save it in <code>art/vox/palette.png</code>.</span></li>
+          <li><span>Python 3 on PATH for <code>compare.py</code>. No packages needed.</span></li>
+          <li><span>Git repo created, first commit is the empty project with settings locked. Add <code>user://bench</code> to nothing — it lives outside the repo by design.</span></li>
+          <li><span>Record the machine: GPU, driver version, CPU, RAM, monitor refresh, in <code>BENCH.md</code> header.</span></li>
+          <li><span>Set the monitor to its max refresh rate and confirm Godot reports it. V-Sync off in the project and in the GPU driver panel for the Godot executable.</span></li>
+          <li><span>Build steps 1–3 (skeleton, recorder, overlay) and get the empty-scene run into <code>BENCH.md</code> as row one.</span></li>
+        </ul>
+      </section>
+
+      <section id="risks">
+        <div class="sec-eyebrow">Risks</div>
+        <h2>Where this could go wrong, and what to do</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Risk</th><th>How we'd know</th><th>Plan B</th></tr></thead>
+          <tbody>
+            <tr><td>GDScript spawn loop can't write 10k slots in one frame</td><td><code>spike</code> worst frame &gt; 8 ms with GPU path on</td><td>Write the whole <code>MultiMesh.buffer</code> as one PackedFloat32Array; failing that, spread spawns over 2–3 frames with a queue (players won't see it)</td></tr>
+            <tr><td>Compatibility renderer caps out on instance count</td><td><code>absurd</code> fails but render ms, not process ms, dominates</td><td>Renderer shoot-out in step 10; <code>forward_plus</code> is fine now that low-end isn't a goal</td></tr>
+            <tr><td>Per-actor cost too high for 1,000 actors</td><td>Step 8 marginal cost &gt; 1.2 µs/actor/frame</td><td>Drop Area2D for a hand-rolled spatial hash; drop Sprite2D for a second MultiMesh with a CPU-written transform per actor</td></tr>
+            <tr><td>Trail layer triples swarm cost</td><td>Layer table shows bit 16 &gt; 0.8 ms</td><td>Velocity-stretch in the vertex shader instead of ghost instances</td></tr>
+            <tr><td>Clock drift between script and shader</td><td>Jitter visible at high counts, not low</td><td>Already designed out: <code>now</code> uniform from the same clock as <code>t0</code>. Verify on day one, not later.</td></tr>
+            <tr><td>Numbers vary run to run</td><td>Three suite runs disagree &gt; 8%</td><td>Background process hunt; if it's Windows, pin Godot to performance cores and disable Game Bar overlay</td></tr>
+          </tbody>
+        </table></div>
+        <p>If steps 1 through 7 pass on the dev PC, phase 0 is effectively done and the rest is measurement. If step 7 fails after plan B, that's the signal to look at a C# or GDExtension swarm before anything else, and the recorder will tell us exactly how far off we are.</p>
+      </section>
+    </main>
+  </div>
+</div>
+
+</body></html>

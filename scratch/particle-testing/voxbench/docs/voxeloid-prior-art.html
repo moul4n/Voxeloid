@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Voxeloid Prior Art</title>
+<style>:root{color-scheme:light dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head><body>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#f3f4f8; --paper:#ffffff; --ink:#151a26; --ink-2:#4a5266; --ink-3:#8a91a3;
+    --line:#dcdfe8; --line-2:#c6cad6;
+    --accent:#1f4fd8; --accent-ink:#ffffff; --accent-soft:#e6ecfc;
+    --warm:#d6791a; --warm-soft:#fbeedc;
+    --ok:#1c8a5a; --ok-soft:#e1f3ea; --bad:#c23b3b; --bad-soft:#fbe4e4; --code-bg:#eef0f6;
+    --shadow:0 1px 0 rgba(21,26,38,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#111420; --paper:#181c2a; --ink:#e9ebf3; --ink-2:#b1b7c8; --ink-3:#767d92;
+      --line:#272c3d; --line-2:#353b50;
+      --accent:#6f95ff; --accent-ink:#0d1220; --accent-soft:#1c2748;
+      --warm:#f0a04b; --warm-soft:#3a2a15;
+      --ok:#4fc58d; --ok-soft:#173327; --bad:#ff7b7b; --bad-soft:#3a1a1a; --code-bg:#12151f;
+      --shadow:none;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#111420; --paper:#181c2a; --ink:#e9ebf3; --ink-2:#b1b7c8; --ink-3:#767d92;
+    --line:#272c3d; --line-2:#353b50;
+    --accent:#6f95ff; --accent-ink:#0d1220; --accent-soft:#1c2748;
+    --warm:#f0a04b; --warm-soft:#3a2a15;
+    --ok:#4fc58d; --ok-soft:#173327; --bad:#ff7b7b; --bad-soft:#3a1a1a; --code-bg:#12151f;
+    --shadow:none;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.62;padding-inline:16px;padding-block:0 64px;}
+  a{color:var(--accent)}
+  h1,h2,h3{font-family:"Chakra Petch","IBM Plex Sans",system-ui,sans-serif;text-wrap:balance;line-height:1.15;margin:0}
+  h1{font-size:clamp(34px,6vw,58px);font-weight:700;letter-spacing:-.01em}
+  h2{font-size:26px;font-weight:600;margin-block:0 14px}
+  h3{font-size:17px;font-weight:600;margin-block:24px 8px}
+  p{margin:0 0 14px}
+  code{font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.9em;background:var(--code-bg);padding:1px 5px;border-radius:3px}
+  .wrap{max-width:1080px;margin:0 auto}
+  header{padding-block:40px 24px;border-bottom:1px solid var(--line-2)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
+  .lede{font-size:18px;color:var(--ink-2);max-width:62ch;margin-top:14px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 20px;font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink-3);padding-block:14px;border-bottom:1px solid var(--line)}
+  .meta b{color:var(--ink);font-weight:500}
+  .layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px;margin-top:32px}
+  nav{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);align-self:start;font-size:13.5px}
+  nav .eyebrow{margin-bottom:8px}
+  nav a{display:block;color:var(--ink-2);text-decoration:none;padding:5px 0 5px 12px;border-left:2px solid var(--line)}
+  nav a:hover,nav a:focus-visible{color:var(--ink);border-left-color:var(--accent);outline:none}
+  main{min-width:0}
+  section{padding-block:12px 36px;border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:0}
+  section > p, section > ul, section > ol, section h3{max-width:70ch}
+  ul,ol{padding-left:20px;margin:0 0 14px}
+  li{margin-bottom:7px}
+  .sec-eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+  table{border-collapse:collapse;width:100%;font-size:14.5px;margin-block:8px 18px}
+  .tbl{overflow-x:auto}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:500;border-bottom:1px solid var(--line-2)}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",monospace;font-size:13.5px;white-space:nowrap}
+  td.m{font-family:"IBM Plex Mono",monospace;font-size:13px;white-space:nowrap}
+  .callout{background:var(--paper);border-left:3px solid var(--accent);padding:14px 18px;margin-block:12px 18px;box-shadow:var(--shadow);max-width:74ch}
+  .callout.warm{border-left-color:var(--warm)} .callout.ok{border-left-color:var(--ok)}
+  .callout p:last-child{margin-bottom:0}
+  /* figure */
+  figure{margin:0 0 20px}
+  figure svg{width:100%;max-width:100%;height:auto;color:var(--ink-2)}
+  figure .hl{color:var(--accent)}
+  figcaption{font-size:14px;color:var(--ink-3);margin-top:8px;max-width:70ch}
+  /* game cards */
+  .game{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--line-2);padding:16px 18px;margin-block:12px 18px;box-shadow:var(--shadow)}
+  .game.near{border-left-color:var(--warm)}
+  .game h3{margin-top:0;font-size:17px}
+  .game .facts{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink-3);margin-bottom:10px}
+  .game p{margin-bottom:10px;font-size:15px}
+  .game p:last-child{margin-bottom:0}
+  .game .tag{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:2px;margin-right:6px}
+  .tag.share{background:var(--warm-soft);color:var(--warm)}
+  .tag.differ{background:var(--ok-soft);color:var(--ok)}
+  @media (max-width:780px){
+    .layout{grid-template-columns:1fr;gap:24px}
+    nav{position:static;display:flex;flex-wrap:wrap;gap:4px 14px}
+    nav .eyebrow{width:100%}
+    nav a{border-left:0;padding:4px 0}
+  }
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Voxeloid · prior art survey · searched 20 September 2026</div>
+    <h1>Has Someone Made This</h1>
+    <p class="lede">A survey of every game found that shares any part of the concept — accreting matter into a planet, building a star, cross-section worlds, nucleosynthesis as a tech tree, a robot placed by something larger to build worlds. The short version: nothing combines them, one game collides with the pitch, and one twelve-year-old browser toy already proved the element tree works.</p>
+  </header>
+  <div class="meta">
+    <span>Games examined <b>30+</b></span>
+    <span>Direct matches <b>none</b></span>
+    <span>Near neighbours <b>3</b></span>
+    <span>Verdict <b>the combination is open</b></span>
+  </div>
+
+  <div class="layout">
+    <nav aria-label="Sections">
+      <div class="eyebrow">Contents</div>
+      <a href="#verdict">The verdict</a>
+      <a href="#screens">What the screen looks like</a>
+      <a href="#closest">The three closest</a>
+      <a href="#field">The wider field</a>
+      <a href="#open">What's unclaimed</a>
+      <a href="#hazards">Hazards</a>
+      <a href="#watch">Watchlist</a>
+      <a href="#sources">Sources</a>
+    </nav>
+
+    <main>
+      <section id="verdict">
+        <div class="sec-eyebrow">Verdict</div>
+        <h2>The combination is original. The parts aren't.</h2>
+        <p>Four things carry the design: a cutaway cross-section as the playfield, a character standing inside the thing being built, matter that physically sprays and settles into layers that seal and merge, and real stellar nucleosynthesis as the progression spine. Plenty of games hit one of those. Nothing found hits two together.</p>
+        <p>That's the normal shape of an original game, and it's worth being clear-eyed about it: originality here is a combination, not an invention. Every individual idea in the design has been touched by something. What nobody has done is put them in the same game.</p>
+        <div class="callout warm">
+          <p><strong>One game to go and play before anything else.</strong> <em>A Game About Making A Planet</em> came out on Steam in May 2026. Mechanically it is a different thing, but the one-line pitch overlaps enough that press and store algorithms will put you next to it. An evening with it is cheap insurance.</p>
+        </div>
+      </section>
+
+      <section id="screens">
+        <div class="sec-eyebrow">The difference at a glance</div>
+        <h2>What the screen looks like</h2>
+        <p>The clearest way to see the gap is to draw the playfields side by side. Viewpoint is the thing that separates this design from everything near it: five of these six are looking at a world from outside, or at a menu. One is inside.</p>
+        <figure>
+          <svg viewBox="0 0 560 318" role="img" aria-label="Six schematic playfield layouts compared. Five look at a world from the outside or at a menu tree; only Voxeloid is a cutaway cross-section with the player at the centre.">
+            <defs>
+              <marker id="ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto">
+                <polygon points="0,1 8,4 0,7" fill="currentColor"/>
+              </marker>
+            </defs>
+
+            <!-- 1. A Game About Making A Planet : top-down converging field -->
+            <g transform="translate(20,20)">
+              <rect x="0" y="0" width="160" height="100" fill="none" stroke="currentColor" stroke-opacity=".3"/>
+              <circle cx="80" cy="50" r="15" fill="currentColor" fill-opacity=".22"/>
+              <g fill="currentColor" fill-opacity=".7">
+                <circle cx="26" cy="22" r="2.5"/><circle cx="132" cy="28" r="2.5"/>
+                <circle cx="38" cy="78" r="2.5"/><circle cx="126" cy="74" r="2.5"/>
+                <circle cx="80" cy="14" r="2.5"/><circle cx="18" cy="52" r="2.5"/>
+              </g>
+              <g stroke="currentColor" stroke-opacity=".55" marker-end="url(#ar)">
+                <line x1="34" y1="28" x2="60" y2="42"/>
+                <line x1="124" y1="34" x2="100" y2="43"/>
+                <line x1="80" y1="22" x2="80" y2="31"/>
+              </g>
+              <circle cx="112" cy="60" r="13" fill="none" stroke="currentColor" stroke-opacity=".45" stroke-dasharray="3 3"/>
+              <text x="80" y="118" text-anchor="middle" font-size="11.5" fill="currentColor">A Game About Making A Planet</text>
+              <text x="80" y="132" text-anchor="middle" font-size="10.5" fill="currentColor" fill-opacity=".65">top-down · cursor · no interior</text>
+            </g>
+
+            <!-- 2. Solar 2 : open space, you are the body -->
+            <g transform="translate(200,20)">
+              <rect x="0" y="0" width="160" height="100" fill="none" stroke="currentColor" stroke-opacity=".3"/>
+              <circle cx="64" cy="54" r="17" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-opacity=".6"/>
+              <g fill="currentColor" fill-opacity=".6">
+                <circle cx="112" cy="32" r="5"/><circle cx="128" cy="66" r="7"/>
+                <circle cx="30" cy="24" r="3.5"/><circle cx="34" cy="84" r="4"/>
+              </g>
+              <path d="M96 84 Q70 92 44 80" fill="none" stroke="currentColor" stroke-opacity=".5" marker-end="url(#ar)"/>
+              <text x="64" y="50" text-anchor="middle" font-size="9.5" fill="currentColor" fill-opacity=".8">you</text>
+              <text x="80" y="118" text-anchor="middle" font-size="11.5" fill="currentColor">Solar 2</text>
+              <text x="80" y="132" text-anchor="middle" font-size="10.5" fill="currentColor" fill-opacity=".65">open space · you are the body</text>
+            </g>
+
+            <!-- 3. Fe[26] : tile grid -->
+            <g transform="translate(380,20)">
+              <rect x="0" y="0" width="160" height="100" fill="none" stroke="currentColor" stroke-opacity=".3"/>
+              <g stroke="currentColor" stroke-opacity=".4" fill="currentColor" fill-opacity=".08">
+                <rect x="44" y="14" width="18" height="18"/><rect x="66" y="14" width="18" height="18"/>
+                <rect x="88" y="14" width="18" height="18"/><rect x="110" y="14" width="18" height="18"/>
+                <rect x="44" y="36" width="18" height="18"/><rect x="66" y="36" width="18" height="18"/>
+                <rect x="88" y="36" width="18" height="18"/><rect x="110" y="36" width="18" height="18"/>
+                <rect x="44" y="58" width="18" height="18"/><rect x="66" y="58" width="18" height="18"/>
+                <rect x="88" y="58" width="18" height="18"/><rect x="110" y="58" width="18" height="18"/>
+              </g>
+              <g font-size="9" fill="currentColor" text-anchor="middle" fill-opacity=".85">
+                <text x="53" y="27">H</text><text x="75" y="27">H</text><text x="97" y="49">He</text><text x="119" y="71">Fe</text>
+              </g>
+              <text x="80" y="118" text-anchor="middle" font-size="11.5" fill="currentColor">Fe[26]</text>
+              <text x="80" y="132" text-anchor="middle" font-size="10.5" fill="currentColor" fill-opacity=".65">tile puzzle · real fusion chain</text>
+            </g>
+
+            <!-- 4. Reus : side-on ribbon world -->
+            <g transform="translate(20,174)">
+              <rect x="0" y="0" width="160" height="100" fill="none" stroke="currentColor" stroke-opacity=".3"/>
+              <path d="M6 96 Q80 52 154 96" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-opacity=".6"/>
+              <g fill="currentColor" fill-opacity=".6">
+                <rect x="44" y="66" width="7" height="9"/><rect x="72" y="58" width="7" height="9"/>
+                <rect x="100" y="63" width="7" height="9"/>
+              </g>
+              <circle cx="122" cy="34" r="8" fill="none" stroke="currentColor" stroke-opacity=".55"/>
+              <text x="80" y="118" text-anchor="middle" font-size="11.5" fill="currentColor">Reus / Reus 2</text>
+              <text x="80" y="132" text-anchor="middle" font-size="10.5" fill="currentColor" fill-opacity=".65">side-on surface · shaped from outside</text>
+            </g>
+
+            <!-- 5. Cell to Singularity : node tree -->
+            <g transform="translate(200,174)">
+              <rect x="0" y="0" width="160" height="100" fill="none" stroke="currentColor" stroke-opacity=".3"/>
+              <g stroke="currentColor" stroke-opacity=".45">
+                <line x1="80" y1="26" x2="48" y2="50"/><line x1="80" y1="26" x2="112" y2="50"/>
+                <line x1="48" y1="58" x2="32" y2="80"/><line x1="48" y1="58" x2="66" y2="80"/>
+                <line x1="112" y1="58" x2="124" y2="80"/>
+              </g>
+              <g fill="currentColor" fill-opacity=".16" stroke="currentColor" stroke-opacity=".5">
+                <rect x="64" y="14" width="32" height="12" rx="2"/>
+                <rect x="32" y="46" width="32" height="12" rx="2"/>
+                <rect x="96" y="46" width="32" height="12" rx="2"/>
+                <rect x="16" y="78" width="32" height="12" rx="2"/>
+                <rect x="50" y="78" width="32" height="12" rx="2"/>
+                <rect x="108" y="78" width="32" height="12" rx="2"/>
+              </g>
+              <text x="80" y="118" text-anchor="middle" font-size="11.5" fill="currentColor">Cell to Singularity</text>
+              <text x="80" y="132" text-anchor="middle" font-size="10.5" fill="currentColor" fill-opacity=".65">menu tree · no playfield</text>
+            </g>
+
+            <!-- 6. Voxeloid : cutaway, player inside -->
+            <g transform="translate(380,174)" class="hl">
+              <rect x="0" y="0" width="160" height="100" fill="none" stroke="currentColor" stroke-opacity=".45"/>
+              <circle cx="80" cy="50" r="44" fill="currentColor" fill-opacity=".05" stroke="currentColor" stroke-opacity=".3"/>
+              <circle cx="80" cy="50" r="38" fill="currentColor" fill-opacity=".05" stroke="currentColor" stroke-opacity=".3"/>
+              <circle cx="80" cy="50" r="33" fill="currentColor" fill-opacity=".06" stroke="currentColor" stroke-opacity=".35"/>
+              <circle cx="80" cy="50" r="24" fill="currentColor" fill-opacity=".10" stroke="currentColor" stroke-opacity=".45"/>
+              <circle cx="80" cy="50" r="13" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-opacity=".55"/>
+              <rect x="76" y="46" width="8" height="8" fill="currentColor"/>
+              <g stroke="currentColor" stroke-opacity=".7" marker-end="url(#ar)">
+                <line x1="18" y1="18" x2="42" y2="34"/>
+                <line x1="142" y1="20" x2="118" y2="34"/>
+                <line x1="80" y1="4" x2="80" y2="16"/>
+                <line x1="24" y1="84" x2="44" y2="70"/>
+              </g>
+              <circle cx="128" cy="80" r="6" fill="currentColor" fill-opacity=".9"/>
+              <text x="80" y="118" text-anchor="middle" font-size="11.5" fill="currentColor" font-weight="600">Voxeloid</text>
+              <text x="80" y="132" text-anchor="middle" font-size="10.5" fill="currentColor" fill-opacity=".8">cutaway · you are inside it</text>
+            </g>
+          </svg>
+          <figcaption>Schematic layouts drawn from descriptions and store pages, not screenshots — follow the links in the sources for the real thing. The solid dot at lower right of the Voxeloid panel is the singularity sitting in the foreground, outside the world's physics.</figcaption>
+        </figure>
+        <p>Read across the row and the pattern is obvious. Everything in the space either floats outside a body looking in, or abandons the playfield entirely for a menu. The cutaway with a character at the centre of it is empty ground, and it's also the thing that will read instantly in a screenshot — which matters more than it sounds, given how crowded the store search is.</p>
+      </section>
+
+      <section id="closest">
+        <div class="sec-eyebrow">Near neighbours</div>
+        <h2>The three closest</h2>
+
+        <div class="game near">
+          <h3>A Game About Making A Planet</h3>
+          <div class="facts">Acrylic Pixel Games · Steam, 4 May 2026 · about £4 · 49 reviews, 59% positive (Mixed) · 1–2 hours</div>
+          <p>A 2D minimalist incremental. You merge particles with a gravity-pulsing cursor and merged particles get absorbed into a growing central planet. There's a small skill tree (asteroids, gravity beams) and an endless mode. The prototype is still up on itch.io, where it has 4.2 out of 5 from 29 ratings.</p>
+          <p><span class="tag share">Shares</span> 2D, incremental, gravity, particles accumulating into a planet, planet growth as the progress bar, and — awkwardly — most of the elevator pitch.</p>
+          <p><span class="tag differ">Differs</span> Top-down and abstract rather than a cross-section. No player character. No layers, no sealing, no merging. No heat or pressure. No elements or nucleosynthesis. No star. One to two hours against eight to twelve. It's a cursor toy, not an embodied loop.</p>
+          <p>The mixed reception and tiny scope mean it hasn't claimed the space. But it exists, it's recent, and the overlap is in exactly the part a store algorithm reads. Play it.</p>
+        </div>
+
+        <div class="game near">
+          <h3>Fe[26]</h3>
+          <div class="facts">"newbrict" · 2014 · free browser game · no commercial presence</div>
+          <p>A 2048 variant where you slide and fuse tiles along genuine stellar reaction pathways — hydrogen to helium to carbon and oxygen, on up through neon and magnesium to iron. The game ends at iron, explicitly, because stars cannot fuse past it. Gizmodo covered it and called it shockingly addictive.</p>
+          <p><span class="tag share">Shares</span> The exact scientific progression, including the iron wall used as a designed ceiling rather than a piece of trivia.</p>
+          <p><span class="tag differ">Differs</span> A ten-minute puzzle game. No accretion, nothing spatial, no planet, no character, no economy.</p>
+          <p>This is the encouraging find. Somebody worked out twelve years ago that the fusion chain makes a good ruleset, and then nobody attached it to a building game. The idea is proven and unoccupied at the same time.</p>
+        </div>
+
+        <div class="game near">
+          <h3>Solar 2</h3>
+          <div class="facts">Jay Watts / Murudai · 2011 · PC, Xbox 360, Mac, iOS, Android · Metacritic 72 (8 reviews) · won Microsoft Dream Build Play 2011</div>
+          <p>The canonical accrete-mass-and-climb-the-ladder game. You start as an asteroid, absorb mass, and become a planet, then a life-bearing planet, then a small star, a large star, a neutron star, a black hole, and finally the Big Crunch and a new Big Bang. Its 2009 predecessor <em>Solar</em> sold around thirty thousand copies, enough to fund the sequel full-time.</p>
+          <p><span class="tag share">Shares</span> Mass accretion as the spine, the star-then-planets cosmology, and the emotional arc of becoming something enormous.</p>
+          <p><span class="tag differ">Differs</span> Top-down open space. You <em>are</em> the body rather than a machine inside it. No interior, no layers, no cross-section, no elements, no refining, no incremental systems. An arcade sandbox, not a builder.</p>
+          <p>Fifteen years old and structurally different, but it's the obvious comparison for anyone who covers the game. Easier to name it as an influence than to have it pointed out.</p>
+        </div>
+      </section>
+
+      <section id="field">
+        <div class="sec-eyebrow">Everything else</div>
+        <h2>The wider field</h2>
+
+        <h3>Accretion and become-a-celestial-body</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Game</th><th class="m">Who, when</th><th>Relationship</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Osmos</strong></td><td class="m">Hemisphere Games, 2009</td><td>Absorb smaller motes, avoid larger, and propulsion costs you mass. That spend-mass-to-act tension rhymes with eat-or-seal. No building, nothing persists. IGF award winner and a real mobile hit.</td></tr>
+            <tr><td><strong>Everything</strong></td><td class="m">David OReilly, 2017</td><td>Become any object at any scale. Shares the cosmic scale-traversal feeling and nothing else — no accretion, no construction, no systems.</td></tr>
+            <tr><td><strong>Tasty Planet</strong></td><td class="m">Dingo Games, 2006</td><td>Grey goo consumes everything and grows. Consume-to-grow scaling, top-down arcade, no gravity or persistence.</td></tr>
+            <tr><td><strong>Protostellar</strong></td><td class="m">GameLoom Studio, 2023, itch.io</td><td>A seven-day jam entry about an asteroid consuming bodies toward fusion ignition. The premise is explicitly ours; the execution is jam-scale with negligible reach.</td></tr>
+            <tr><td><strong>Cosmic Accretion</strong></td><td class="m">jbalde, itch.io, unreleased</td><td>In development as of April 2026, Godot. Shoot meteorites at bodies to grow planets and stars, with a dust currency and upgrades. Top-down solar-system view, no interior. Worth checking back on; may not ship.</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>2D planet building and shaping</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Game</th><th class="m">Who, when</th><th>Relationship</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Reus / Reus 2</strong></td><td class="m">Abbey Games, 2013 / 2024</td><td>Side-on ribbon planet where giants place biomes. The closest thing to our 2D planet <em>visual language</em> — study it for camera and curvature. Surface only, no interior, no accretion, no physics.</td></tr>
+            <tr><td><strong>TerraGenesis</strong></td><td class="m">Edgeworks, 2016, mobile</td><td>Terraforming with real NASA data, 10M+ downloads. Menus and sliders, no physics. Proof the audience for planet-scale science exists on mobile.</td></tr>
+            <tr><td><strong>Terra Nil</strong></td><td class="m">Free Lives / Devolver, 2023</td><td>Reverse city-builder, restore an ecosystem then leave. Shares the "build it, then go" ending shape. Tile-based and top-down.</td></tr>
+            <tr><td><strong>Birthdays the Beginning</strong></td><td class="m">Arc System Works, 2017</td><td>Raise and lower terrain and life evolves. Closest to "shape a world and watch matter become something", but 3D voxel and top-down.</td></tr>
+            <tr><td><strong>Planetoid Pioneers</strong></td><td class="m">Data Realms, 2018</td><td>2D physics platformer with radial gravity around small planetoids. Shares the radial 2D gravity. Commercially failed and effectively abandoned.</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>Idle and incremental cosmic</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Game</th><th class="m">Who, when</th><th>Relationship</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Cell to Singularity</strong></td><td class="m">Computer Lunch, 2018</td><td>The genre's biggest science-tree idler — tens of millions of downloads. Big Bang through cells to humans to AI, with a space branch. Real-science tech tree, long cosmic arc, prestige resets. No spatial play at all. The best evidence that this audience is large.</td></tr>
+            <tr><td><strong>Universal Paperclips</strong></td><td class="m">Frank Lantz, 2017</td><td>Free browser landmark that ends by converting all matter in the universe. Shares the finite runtime and the phase-shift structure we're borrowing. Pure text and buttons.</td></tr>
+            <tr><td><strong>Idle Planet Miner</strong></td><td class="m">Tequila Games, mobile</td><td>Mine planets, smelt and combine metals. Element refining and tiers, but the elements are ore grades rather than fusion products.</td></tr>
+            <tr><td><strong>The rest</strong></td><td class="m">2022–2026</td><td>Planet Evolution, Planet Builder, Idle World, Idle Planets, Terrafactory, Planetary Factory, To the Stars Idle, Incremental Orbits, Starvester. All menu clickers or factory idlers using "planet" as a skin. None use accretion, cross-sections, layers or nucleosynthesis. Collectively they make the store search space dangerous.</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>A machine placed by a creator to build worlds</h3>
+        <p>Nothing matching. The nearest are <strong>Terraforming Earth</strong> (Andras Csibi, Steam — robots rebuilding a dead Earth across generations, 2D side view, but a platformer on an existing planet) and <strong>Teo: The Last Terraformer</strong> (a jam-scale itch.io game about a small terraforming robot). The specific framing — a small machine at the core of a world it is building, put there by something larger that never explains itself — is unoccupied, and it's probably the strongest identity hook in the whole design.</p>
+
+        <h3>Real nucleosynthesis as progression</h3>
+        <p>Only Fe[26], above. <em>Universe Sandbox</em> models accretion physically but is a simulator rather than a game with progression. Falling-sand games like Sandboxels have element reaction tables but no gravitational planet formation and no tech tree. Nothing found uses the hydrogen-to-iron climb, the iron wall, and the supernova that makes everything heavier as a game-long unlock spine.</p>
+      </section>
+
+      <section id="open">
+        <div class="sec-eyebrow">Conclusion</div>
+        <h2>What's actually unclaimed</h2>
+        <ul>
+          <li><strong>The cutaway cross-section as the playfield.</strong> Everything nearby looks at a world from outside or replaces the world with a menu.</li>
+          <li><strong>A character embodied inside the thing being built</strong>, at the centre, never leaving until the work is done.</li>
+          <li><strong>Matter that physically sprays and settles into persistent layers</strong> which then seal and merge, rather than a number going up.</li>
+          <li><strong>Heat and pressure emerging from your own accumulated mass</strong>, flipping from goal in act one to hazard in act two.</li>
+          <li><strong>Nucleosynthesis as the unlock tree</strong>, with the iron wall as the act break.</li>
+          <li><strong>Star first, then planets from its debris</strong>, with per-world resets and knowledge as the only thing that travels.</li>
+        </ul>
+        <div class="callout ok">
+          <p><strong>What to lead with.</strong> The element tree is the sharpest differentiator, because it's real, it's legible in a sentence, and exactly one twelve-year-old browser game has ever used it. The cross-section is the sharpest <em>visual</em> differentiator, because it makes a screenshot that nothing else in the category can make. Those two together are the pitch.</p>
+        </div>
+      </section>
+
+      <section id="hazards">
+        <div class="sec-eyebrow">Risks</div>
+        <h2>Hazards worth naming now</h2>
+        <p><strong>The pitch collision.</strong> <em>A Game About Making A Planet</em> occupies the same sentence. It's small and mixed, so it hasn't claimed the space, but the comparison will be made. The defence is that the screenshots look nothing alike, which is another reason the cross-section earns its place.</p>
+        <p><strong>The crowded search space.</strong> There are at least eight games with near-identical "idle planet" names, all menu clickers. Anything with "planet" and "idle" in the title disappears into them. The title and the first screenshot have to do the work of signalling that this isn't one of those. "Voxeloid" is distinctive enough; the risk is in the subtitle and the tags.</p>
+        <p><strong>The Solar 2 comparison.</strong> Inevitable in any coverage. Get ahead of it by naming it as an influence rather than waiting to be told.</p>
+        <p><strong>The unreleased one.</strong> <em>Cosmic Accretion</em> is in active development in Godot and shares the strike-matter-to-grow-a-body idea. It's top-down with no interior, so not a direct threat, but it's the only thing found that's currently being built in the same neighbourhood.</p>
+      </section>
+
+      <section id="watch">
+        <div class="sec-eyebrow">Keeping this current</div>
+        <h2>Watchlist</h2>
+        <p>Prior art rots. Three things to re-check every few months, and definitely before any public announcement:</p>
+        <div class="tbl"><table>
+          <thead><tr><th>What</th><th>Why</th><th>Where</th></tr></thead>
+          <tbody>
+            <tr><td>A Game About Making A Planet</td><td>If its review count and positivity climb, the comparison gets louder</td><td>Its Steam page</td></tr>
+            <tr><td>Cosmic Accretion</td><td>Unreleased and in the neighbourhood; may or may not ship</td><td>Its itch.io devlog</td></tr>
+            <tr><td>New "incremental planet" releases</td><td>The category gains several a year</td><td>Steam search, itch.io gravity and planet tags, incrementaldb.com</td></tr>
+          </tbody>
+        </table></div>
+        <p>Worth noting that two items surfaced in the search but were not verified in detail: <em>Core &amp; Crust</em> (rubidant, itch.io — the name suggests layers and deserves a direct look) and <em>Blossom: The Seed of Life</em>. Neither appears to be more than a small project, but both are unchecked rather than cleared.</p>
+      </section>
+
+      <section id="sources">
+        <div class="sec-eyebrow">Sources</div>
+        <h2>Where this came from</h2>
+        <p><strong>Closest matches:</strong> <a href="https://store.steampowered.com/app/4314260/A_Game_About_Making_A_Planet/">A Game About Making A Planet on Steam</a> and <a href="https://acrylic-pixel.itch.io/a-game-about-making-a-planet">its itch.io prototype</a> · <a href="https://newbrict.github.io/Fe26/">Fe[26]</a> and <a href="https://gizmodo.com/stellar-fusion-is-shockingly-addictive-1564152075">Gizmodo's write-up</a> · <a href="https://en.wikipedia.org/wiki/Solar_2">Solar 2</a>, <a href="https://www.pcgamer.com/solar-2-review/">PC Gamer review</a>.</p>
+        <p><strong>Accretion:</strong> <a href="https://www.gamespot.com/reviews/osmos-review/1900-6216073/">Osmos review</a> · <a href="https://en.wikipedia.org/wiki/Everything_(video_game)">Everything</a> · <a href="https://www.dingogames.com/tastyplanet/">Tasty Planet</a> · <a href="https://gameloom-studio.itch.io/protostellar">Protostellar</a> · <a href="https://jbalde.itch.io/cosmic-accretion">Cosmic Accretion</a>.</p>
+        <p><strong>Planet building:</strong> <a href="https://en.wikipedia.org/wiki/Reus_(video_game)">Reus</a> · <a href="https://store.steampowered.com/app/1875060/Reus_2/">Reus 2</a> · <a href="https://play.google.com/store/apps/details?id=com.alexanderwinn.TerraGenesis">TerraGenesis</a> · <a href="https://en.wikipedia.org/wiki/Terra_Nil">Terra Nil</a> · <a href="https://en.wikipedia.org/wiki/Birthdays_the_Beginning">Birthdays the Beginning</a> · <a href="https://store.steampowered.com/app/300260/Planetoid_Pioneers/">Planetoid Pioneers</a>.</p>
+        <p><strong>Incremental:</strong> <a href="https://en.wikipedia.org/wiki/Cell_to_Singularity">Cell to Singularity</a> · <a href="https://en.wikipedia.org/wiki/Universal_Paperclips">Universal Paperclips</a> · <a href="https://store.steampowered.com/app/2768260/Idle_Planets/">Idle Planets</a> · <a href="https://www.incrementaldb.com/game/a-game-about-making-a-planet">incrementaldb</a>.</p>
+        <p><strong>Robots and terraforming:</strong> <a href="https://store.steampowered.com/app/1029220/Terraforming_Earth/">Terraforming Earth</a> · <a href="https://lubit-games.itch.io/teo">Teo: The Last Terraformer</a> · <a href="https://rubidant.itch.io/core-crust">Core &amp; Crust</a>.</p>
+        <p style="font-size:14px;color:var(--ink-3)">Reus 2 and Terra Nil sales figures are estimates and not publicly confirmed. Review counts move — the numbers for A Game About Making A Planet are as of 20 September 2026. Cosmic Accretion, Core &amp; Crust and Blossom were surfaced by search but not deeply verified.</p>
+      </section>
+    </main>
+  </div>
+</div>
+
+</body></html>

@@ -1,0 +1,390 @@
+{
+ "frame_px": 8,
+ "grid": 8,
+ "frames": [
+  {
+   "name": "debris_000_rock_blob",
+   "angle": 0,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "name": "debris_001_ice_blob",
+   "angle": 0,
+   "x": 8,
+   "y": 0
+  },
+  {
+   "name": "debris_002_ember_shard",
+   "angle": 0,
+   "x": 16,
+   "y": 0
+  },
+  {
+   "name": "debris_003_acid_crystal",
+   "angle": 0,
+   "x": 24,
+   "y": 0
+  },
+  {
+   "name": "debris_004_crystal_blob",
+   "angle": 0,
+   "x": 32,
+   "y": 0
+  },
+  {
+   "name": "debris_005_gold_blob",
+   "angle": 0,
+   "x": 40,
+   "y": 0
+  },
+  {
+   "name": "debris_006_rock_shard",
+   "angle": 0,
+   "x": 48,
+   "y": 0
+  },
+  {
+   "name": "debris_007_ice_crystal",
+   "angle": 0,
+   "x": 56,
+   "y": 0
+  },
+  {
+   "name": "debris_008_ember_blob",
+   "angle": 0,
+   "x": 0,
+   "y": 8
+  },
+  {
+   "name": "debris_009_acid_blob",
+   "angle": 0,
+   "x": 8,
+   "y": 8
+  },
+  {
+   "name": "debris_010_crystal_shard",
+   "angle": 0,
+   "x": 16,
+   "y": 8
+  },
+  {
+   "name": "debris_011_gold_crystal",
+   "angle": 0,
+   "x": 24,
+   "y": 8
+  },
+  {
+   "name": "debris_012_rock_blob",
+   "angle": 0,
+   "x": 32,
+   "y": 8
+  },
+  {
+   "name": "debris_013_ice_blob",
+   "angle": 0,
+   "x": 40,
+   "y": 8
+  },
+  {
+   "name": "debris_014_ember_shard",
+   "angle": 0,
+   "x": 48,
+   "y": 8
+  },
+  {
+   "name": "debris_015_acid_crystal",
+   "angle": 0,
+   "x": 56,
+   "y": 8
+  },
+  {
+   "name": "debris_016_crystal_blob",
+   "angle": 0,
+   "x": 0,
+   "y": 16
+  },
+  {
+   "name": "debris_017_gold_blob",
+   "angle": 0,
+   "x": 8,
+   "y": 16
+  },
+  {
+   "name": "debris_018_rock_shard",
+   "angle": 0,
+   "x": 16,
+   "y": 16
+  },
+  {
+   "name": "debris_019_ice_crystal",
+   "angle": 0,
+   "x": 24,
+   "y": 16
+  },
+  {
+   "name": "debris_020_ember_blob",
+   "angle": 0,
+   "x": 32,
+   "y": 16
+  },
+  {
+   "name": "debris_021_acid_blob",
+   "angle": 0,
+   "x": 40,
+   "y": 16
+  },
+  {
+   "name": "debris_022_crystal_shard",
+   "angle": 0,
+   "x": 48,
+   "y": 16
+  },
+  {
+   "name": "debris_023_gold_crystal",
+   "angle": 0,
+   "x": 56,
+   "y": 16
+  },
+  {
+   "name": "debris_024_rock_blob",
+   "angle": 0,
+   "x": 0,
+   "y": 24
+  },
+  {
+   "name": "debris_025_ice_blob",
+   "angle": 0,
+   "x": 8,
+   "y": 24
+  },
+  {
+   "name": "debris_026_ember_shard",
+   "angle": 0,
+   "x": 16,
+   "y": 24
+  },
+  {
+   "name": "debris_027_acid_crystal",
+   "angle": 0,
+   "x": 24,
+   "y": 24
+  },
+  {
+   "name": "debris_028_crystal_blob",
+   "angle": 0,
+   "x": 32,
+   "y": 24
+  },
+  {
+   "name": "debris_029_gold_blob",
+   "angle": 0,
+   "x": 40,
+   "y": 24
+  },
+  {
+   "name": "debris_030_rock_shard",
+   "angle": 0,
+   "x": 48,
+   "y": 24
+  },
+  {
+   "name": "debris_031_ice_crystal",
+   "angle": 0,
+   "x": 56,
+   "y": 24
+  },
+  {
+   "name": "debris_032_ember_blob",
+   "angle": 0,
+   "x": 0,
+   "y": 32
+  },
+  {
+   "name": "debris_033_acid_blob",
+   "angle": 0,
+   "x": 8,
+   "y": 32
+  },
+  {
+   "name": "debris_034_crystal_shard",
+   "angle": 0,
+   "x": 16,
+   "y": 32
+  },
+  {
+   "name": "debris_035_gold_crystal",
+   "angle": 0,
+   "x": 24,
+   "y": 32
+  },
+  {
+   "name": "debris_036_rock_blob",
+   "angle": 0,
+   "x": 32,
+   "y": 32
+  },
+  {
+   "name": "debris_037_ice_blob",
+   "angle": 0,
+   "x": 40,
+   "y": 32
+  },
+  {
+   "name": "debris_038_ember_shard",
+   "angle": 0,
+   "x": 48,
+   "y": 32
+  },
+  {
+   "name": "debris_039_acid_crystal",
+   "angle": 0,
+   "x": 56,
+   "y": 32
+  },
+  {
+   "name": "debris_040_crystal_blob",
+   "angle": 0,
+   "x": 0,
+   "y": 40
+  },
+  {
+   "name": "debris_041_gold_blob",
+   "angle": 0,
+   "x": 8,
+   "y": 40
+  },
+  {
+   "name": "debris_042_rock_shard",
+   "angle": 0,
+   "x": 16,
+   "y": 40
+  },
+  {
+   "name": "debris_043_ice_crystal",
+   "angle": 0,
+   "x": 24,
+   "y": 40
+  },
+  {
+   "name": "debris_044_ember_blob",
+   "angle": 0,
+   "x": 32,
+   "y": 40
+  },
+  {
+   "name": "debris_045_acid_blob",
+   "angle": 0,
+   "x": 40,
+   "y": 40
+  },
+  {
+   "name": "debris_046_crystal_shard",
+   "angle": 0,
+   "x": 48,
+   "y": 40
+  },
+  {
+   "name": "debris_047_gold_crystal",
+   "angle": 0,
+   "x": 56,
+   "y": 40
+  },
+  {
+   "name": "debris_048_rock_blob",
+   "angle": 0,
+   "x": 0,
+   "y": 48
+  },
+  {
+   "name": "debris_049_ice_blob",
+   "angle": 0,
+   "x": 8,
+   "y": 48
+  },
+  {
+   "name": "debris_050_ember_shard",
+   "angle": 0,
+   "x": 16,
+   "y": 48
+  },
+  {
+   "name": "debris_051_acid_crystal",
+   "angle": 0,
+   "x": 24,
+   "y": 48
+  },
+  {
+   "name": "debris_052_crystal_blob",
+   "angle": 0,
+   "x": 32,
+   "y": 48
+  },
+  {
+   "name": "debris_053_gold_blob",
+   "angle": 0,
+   "x": 40,
+   "y": 48
+  },
+  {
+   "name": "debris_054_rock_shard",
+   "angle": 0,
+   "x": 48,
+   "y": 48
+  },
+  {
+   "name": "debris_055_ice_crystal",
+   "angle": 0,
+   "x": 56,
+   "y": 48
+  },
+  {
+   "name": "debris_056_ember_blob",
+   "angle": 0,
+   "x": 0,
+   "y": 56
+  },
+  {
+   "name": "debris_057_acid_blob",
+   "angle": 0,
+   "x": 8,
+   "y": 56
+  },
+  {
+   "name": "debris_058_crystal_shard",
+   "angle": 0,
+   "x": 16,
+   "y": 56
+  },
+  {
+   "name": "debris_059_gold_crystal",
+   "angle": 0,
+   "x": 24,
+   "y": 56
+  },
+  {
+   "name": "debris_060_rock_blob",
+   "angle": 0,
+   "x": 32,
+   "y": 56
+  },
+  {
+   "name": "debris_061_ice_blob",
+   "angle": 0,
+   "x": 40,
+   "y": 56
+  },
+  {
+   "name": "debris_062_ember_shard",
+   "angle": 0,
+   "x": 48,
+   "y": 56
+  },
+  {
+   "name": "debris_063_acid_crystal",
+   "angle": 0,
+   "x": 56,
+   "y": 56
+  }
+ ]
+}

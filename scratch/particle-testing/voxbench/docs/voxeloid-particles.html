@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Particles Without Collisions</title>
+<style>:root{color-scheme:light dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head><body>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#f3f4f8; --paper:#ffffff; --ink:#151a26; --ink-2:#4a5266; --ink-3:#8a91a3;
+    --line:#dcdfe8; --line-2:#c6cad6;
+    --accent:#1f4fd8; --accent-ink:#ffffff; --accent-soft:#e6ecfc;
+    --warm:#d6791a; --warm-soft:#fbeedc;
+    --ok:#1c8a5a; --ok-soft:#e1f3ea; --bad:#c23b3b; --bad-soft:#fbe4e4; --code-bg:#eef0f6;
+    --sim-bg:#12151f; --sim-line:#2a3040; --sim-ink:#e9ebf3; --sim-ink-2:#b1b7c8;
+    --shadow:0 1px 0 rgba(21,26,38,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#111420; --paper:#181c2a; --ink:#e9ebf3; --ink-2:#b1b7c8; --ink-3:#767d92;
+      --line:#272c3d; --line-2:#353b50;
+      --accent:#6f95ff; --accent-ink:#0d1220; --accent-soft:#1c2748;
+      --warm:#f0a04b; --warm-soft:#3a2a15;
+      --ok:#4fc58d; --ok-soft:#173327; --bad:#ff7b7b; --bad-soft:#3a1a1a; --code-bg:#12151f;
+      --sim-bg:#0f131d; --sim-line:#272c3d;
+      --shadow:none;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#111420; --paper:#181c2a; --ink:#e9ebf3; --ink-2:#b1b7c8; --ink-3:#767d92;
+    --line:#272c3d; --line-2:#353b50;
+    --accent:#6f95ff; --accent-ink:#0d1220; --accent-soft:#1c2748;
+    --warm:#f0a04b; --warm-soft:#3a2a15;
+    --ok:#4fc58d; --ok-soft:#173327; --bad:#ff7b7b; --bad-soft:#3a1a1a; --code-bg:#12151f;
+    --sim-bg:#0f131d; --sim-line:#272c3d;
+    --shadow:none;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.62;padding-inline:16px;padding-block:0 64px;}
+  a{color:var(--accent)}
+  h1,h2,h3{font-family:"Chakra Petch","IBM Plex Sans",system-ui,sans-serif;text-wrap:balance;line-height:1.15;margin:0}
+  h1{font-size:clamp(32px,5.6vw,54px);font-weight:700;letter-spacing:-.01em}
+  h2{font-size:26px;font-weight:600;margin-block:0 14px}
+  h3{font-size:17px;font-weight:600;margin-block:24px 8px}
+  p{margin:0 0 14px}
+  code{font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.9em;background:var(--code-bg);padding:1px 5px;border-radius:3px}
+  pre{font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.5;background:var(--code-bg);border:1px solid var(--line);padding:14px 16px;overflow-x:auto;margin:0 0 16px;border-radius:4px}
+  pre code{background:none;padding:0}
+  .wrap{max-width:1080px;margin:0 auto}
+  header{padding-block:40px 24px;border-bottom:1px solid var(--line-2)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
+  .lede{font-size:18px;color:var(--ink-2);max-width:64ch;margin-top:14px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 20px;font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink-3);padding-block:14px;border-bottom:1px solid var(--line)}
+  .meta b{color:var(--ink);font-weight:500}
+  .layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px;margin-top:32px}
+  nav{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);align-self:start;font-size:13.5px}
+  nav .eyebrow{margin-bottom:8px}
+  nav a{display:block;color:var(--ink-2);text-decoration:none;padding:5px 0 5px 12px;border-left:2px solid var(--line)}
+  nav a:hover,nav a:focus-visible{color:var(--ink);border-left-color:var(--accent);outline:none}
+  main{min-width:0}
+  section{padding-block:12px 36px;border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:0}
+  section > p, section > ul, section > ol, section h3{max-width:70ch}
+  ul,ol{padding-left:20px;margin:0 0 14px}
+  li{margin-bottom:7px}
+  .sec-eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+  table{border-collapse:collapse;width:100%;font-size:14.5px;margin-block:8px 18px}
+  .tbl{overflow-x:auto}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:500;border-bottom:1px solid var(--line-2)}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",monospace;font-size:13.5px;white-space:nowrap}
+  td.m{font-family:"IBM Plex Mono",monospace;font-size:13px}
+  tr.good td{background:var(--ok-soft)} tr.bad td{background:var(--bad-soft)}
+  .callout{background:var(--paper);border-left:3px solid var(--accent);padding:14px 18px;margin-block:12px 18px;box-shadow:var(--shadow);max-width:74ch}
+  .callout.warm{border-left-color:var(--warm)} .callout.ok{border-left-color:var(--ok)} .callout.bad{border-left-color:var(--bad)}
+  .callout p:last-child{margin-bottom:0}
+  figure{margin:0 0 20px}
+  figure svg{width:100%;max-width:720px;height:auto;color:var(--ink-2)}
+  figure .hl{color:var(--accent)}
+  figcaption{font-size:14px;color:var(--ink-3);margin-top:8px;max-width:70ch}
+  /* embedded simulation */
+  .simwrap{background:var(--sim-bg);border:1px solid var(--sim-line);border-radius:4px;padding:18px;margin-block:14px 18px;color:var(--sim-ink)}
+  .sim{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:22px;align-items:start}
+  .sim canvas{width:100%;height:auto;image-rendering:pixelated;background:#0d1018;border:1px solid var(--sim-line);display:block}
+  .panel{font-size:13.5px;min-width:0}
+  .readout{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12.5px;line-height:1.65;white-space:pre-wrap;background:rgba(255,255,255,.04);border:1px solid var(--sim-line);padding:11px 13px;margin-bottom:12px;color:var(--sim-ink-2)}
+  .readout b{color:#6f95ff;font-weight:500}
+  .readout .big{font-size:17px;color:#f0a04b}
+  .ctl{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .simwrap button{font-family:"IBM Plex Sans",sans-serif;font-size:13px;background:rgba(111,149,255,.14);color:#8fadff;border:1px solid #4d6fd0;padding:5px 11px;border-radius:3px;cursor:pointer}
+  .simwrap button:hover{background:#6f95ff;color:#0d1220}
+  .simwrap button.on{background:#6f95ff;color:#0d1220;border-color:#6f95ff}
+  .simwrap button:focus-visible{outline:2px solid var(--sim-ink);outline-offset:2px}
+  .simwrap label{display:block;font-size:12.5px;color:var(--sim-ink-2);margin:12px 0 4px}
+  .simwrap input[type=range]{width:100%;accent-color:#6f95ff}
+  .simwrap .note{font-size:12.5px;color:#8a91a3;margin:12px 0 0;line-height:1.55}
+  @media (max-width:860px){ .sim{grid-template-columns:1fr} }
+  @media (max-width:780px){
+    .layout{grid-template-columns:1fr;gap:24px}
+    nav{position:static;display:flex;flex-wrap:wrap;gap:4px 14px}
+    nav .eyebrow{width:100%}
+    nav a{border-left:0;padding:4px 0}
+  }
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Voxeloid · particle architecture · researched and measured 20 September 2026</div>
+    <h1>Particles Without Collisions</h1>
+    <p class="lede">The CPU is the bottleneck because the simulation is asking the wrong question. Hundreds of thousands of particles is not a collision problem to be optimised — it is a collision problem to be deleted. Here is how the games that do this actually do it, a working prototype that holds 100,000 particles at 8 ms in JavaScript, and what it means for the Godot build.</p>
+  </header>
+  <div class="meta">
+    <span>Measured <b>81 ns per particle per frame</b></span>
+    <span>Scaling <b>flat from 50k to 1M</b></span>
+    <span>Collision tests <b>one array read each</b></span>
+    <span>Pairwise equivalent <b>avoided entirely</b></span>
+  </div>
+
+  <div class="layout">
+    <nav aria-label="Sections">
+      <div class="eyebrow">Contents</div>
+      <a href="#diagnosis">The diagnosis</a>
+      <a href="#idea">The one idea</a>
+      <a href="#demo">Try it</a>
+      <a href="#model">The three representations</a>
+      <a href="#materials">Materials</a>
+      <a href="#meteors">Meteors</a>
+      <a href="#ladder">The escalation ladder</a>
+      <a href="#numbers">Measured numbers</a>
+      <a href="#godot">Godot reality check</a>
+      <a href="#field">What others do</a>
+      <a href="#next">What to change</a>
+      <a href="#sources">Sources</a>
+    </nav>
+
+    <main>
+      <section id="diagnosis">
+        <div class="sec-eyebrow">Diagnosis</div>
+        <h2>Why the CPU is stacking up</h2>
+        <p>If every particle is an object with a collider, the engine has to answer "what is this touching?" for every one of them, every frame. Even with a good broad phase that is a spatial query per particle, plus the bookkeeping of keeping a live handle, a transform, and a physics body in sync. At a few thousand it is fine. At a hundred thousand it is hopeless, and no amount of optimising the query will save it, because the query shouldn't exist.</p>
+        <p>The games that do this at scale — Noita, the falling-sand lineage, and by all appearances Gnorp — are not running faster collision. They have no collision system at all for this material. That is the whole trick, and everything below follows from it.</p>
+      </section>
+
+      <section id="idea">
+        <div class="sec-eyebrow">The idea</div>
+        <h2>Particles collide with a field, never with each other</h2>
+        <p>Keep one shared structure that describes where the world's surface is. A particle in flight asks that structure a single question each frame — <em>am I below the surface at my angle?</em> — which is one array read at a computed index. If the answer is yes, the particle stops existing and its mass is added to the field.</p>
+        <p>Two things fall out of that immediately. The cost per particle is constant and tiny, so the total is linear in the number of particles in flight. And the number in flight is bounded by how much is currently in the air, not by how much material the planet contains — because the moment material settles it stops being a particle and becomes a number in an array.</p>
+        <div class="callout">
+          <p>The falling-sand engines say the same thing in a different shape: in a grid, a cell's neighbours are <em>array indices</em>. The cell below index <code>i</code> is <code>i + width</code>. There is nothing to search for, so there is no broad phase, no spatial hash, no collision pairs, and the inner loop walks memory in a straight line.</p>
+        </div>
+      </section>
+
+      <section id="demo">
+        <div class="sec-eyebrow">Proof</div>
+        <h2>A working version, running in this page</h2>
+        <p>This is the whole architecture in about 120 lines of JavaScript: a radial height field of 720 columns, particles in flight with ballistic motion under central gravity, deposit on contact, and an angle-of-repose pass that makes material slump. Hit the meteor button. Change the material and watch the pile angle change — that is one number per material.</p>
+        <div class="simwrap">
+<div class="sim">
+  <canvas id="c" width="440" height="440"></canvas>
+  <div class="panel">
+    <div class="readout" id="ro">starting…</div>
+    <div class="ctl">
+      <button type="button" id="met">Meteor strike</button>
+      <button type="button" id="rst">Reset</button>
+    </div>
+    <label>Depositing</label>
+    <div class="ctl" id="mats"></div>
+    <label for="cnt">Particles in flight: <span id="cntv">40000</span></label>
+    <input type="range" id="cnt" min="2000" max="120000" step="2000" value="40000">
+    <p class="note">Every particle is tested against the surface exactly once per frame — one array lookup. No particle is ever tested against another particle. Change the material and watch the pile angle change; that's one number per material.</p>
+  </div>
+</div>
+
+        </div>
+        <p>The numbers in that panel are from your machine, in JavaScript, with the drawing included. The important one is the last pair: the number of tests actually performed against the number that pairwise collision would have required. At 40,000 particles that is roughly forty thousand against eight hundred million.</p>
+      </section>
+
+      <section id="model">
+        <div class="sec-eyebrow">Architecture</div>
+        <h2>Three representations, and material moves between them</h2>
+        <p>Nothing in the game is "a particle" for its whole life. Material passes through three states, each with a cost profile that suits what it is doing at the time.</p>
+        <figure>
+          <svg viewBox="0 0 720 300" role="img" aria-label="Material flows between three representations. Flight particles deposit into the field when they land; striking the source and meteor impacts eject material from the field back into flight; the surface flow pass slumps the field in place every frame.">
+            <defs><marker id="a2" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><polygon points="0,1 8,4 0,7" fill="currentColor"/></marker></defs>
+
+            <rect x="10" y="44" width="180" height="96" rx="3" fill="currentColor" fill-opacity=".05" stroke="currentColor" stroke-opacity=".5"/>
+            <text x="100" y="72" text-anchor="middle" font-size="14" font-weight="600" fill="currentColor">FLIGHT</text>
+            <text x="100" y="93" text-anchor="middle" font-size="11.5" fill="currentColor" fill-opacity=".8">packed arrays</text>
+            <text x="100" y="109" text-anchor="middle" font-size="11.5" fill="currentColor" fill-opacity=".8">no mutual collision</text>
+            <text x="100" y="128" text-anchor="middle" font-size="11" fill="currentColor" fill-opacity=".55">81 ns each</text>
+
+            <g class="hl">
+              <rect x="270" y="44" width="180" height="96" rx="3" fill="currentColor" fill-opacity=".09" stroke="currentColor" stroke-opacity=".75"/>
+              <text x="360" y="72" text-anchor="middle" font-size="14" font-weight="600" fill="currentColor">FIELD</text>
+              <text x="360" y="93" text-anchor="middle" font-size="11.5" fill="currentColor" fill-opacity=".85">720 column heights</text>
+              <text x="360" y="109" text-anchor="middle" font-size="11.5" fill="currentColor" fill-opacity=".85">+ material bands</text>
+              <text x="360" y="128" text-anchor="middle" font-size="11" fill="currentColor" fill-opacity=".6">fixed size, tiny</text>
+            </g>
+
+            <rect x="530" y="44" width="180" height="96" rx="3" fill="currentColor" fill-opacity=".05" stroke="currentColor" stroke-opacity=".5"/>
+            <text x="620" y="72" text-anchor="middle" font-size="14" font-weight="600" fill="currentColor">SURFACE FLOW</text>
+            <text x="620" y="93" text-anchor="middle" font-size="11.5" fill="currentColor" fill-opacity=".8">angle of repose,</text>
+            <text x="620" y="109" text-anchor="middle" font-size="11.5" fill="currentColor" fill-opacity=".8">column to column</text>
+            <text x="620" y="128" text-anchor="middle" font-size="11" fill="currentColor" fill-opacity=".55">0.4 ms, always</text>
+
+            <g stroke="currentColor" stroke-opacity=".7" fill="none" marker-end="url(#a2)">
+              <line x1="192" y1="74" x2="264" y2="74"/>
+              <line x1="268" y1="116" x2="196" y2="116"/>
+              <line x1="452" y1="82" x2="524" y2="82"/>
+              <line x1="524" y1="106" x2="452" y2="106"/>
+            </g>
+            <text x="228" y="66" text-anchor="middle" font-size="11" fill="currentColor">deposit</text>
+            <text x="228" y="133" text-anchor="middle" font-size="11" fill="currentColor">eject</text>
+            <text x="488" y="74" text-anchor="middle" font-size="11" fill="currentColor">reads</text>
+            <text x="488" y="123" text-anchor="middle" font-size="11" fill="currentColor">writes</text>
+
+            <line x1="10" y1="186" x2="710" y2="186" stroke="currentColor" stroke-opacity=".3" stroke-dasharray="4 4"/>
+            <text x="10" y="210" font-size="12.5" font-weight="600" fill="currentColor">The bound that matters</text>
+            <text x="10" y="232" font-size="11.5" fill="currentColor" fill-opacity=".8">Flight count is "how much is in the air right now" — a few tens of thousands.</text>
+            <text x="10" y="250" font-size="11.5" fill="currentColor" fill-opacity=".8">It does not grow with how much material the planet has accumulated.</text>
+            <text x="10" y="268" font-size="11.5" fill="currentColor" fill-opacity=".8">Settled material is a number in a fixed-size array. That is the whole point.</text>
+          </svg>
+          <figcaption>Material is only expensive while it is in the air. "Eject" is the source being struck, or a meteor impact. "Deposit" is the one array read that replaces the entire collision system.</figcaption>
+        </figure>
+
+        <h3>The field</h3>
+        <p>A radial height field: for each of 720 angular columns, the radius of the surface, plus a coarse stack of material bands below it. That is 720 floats and about 69 KB of material IDs, total, for a whole planet. It does not grow. Merging deep layers, which the design already calls for, is an operation on this array and nothing else.</p>
+
+        <h3>Flight</h3>
+        <p>Packed parallel arrays — x, y, vx, vy, material — with a live count and swap-removal, so dead slots cost nothing. Motion is ballistic under gravity pointing at the centre. The only test is against the field. This is exactly the structure the voxbench swarm already has; it needs the gravity direction changed and the landing test added.</p>
+
+        <h3>Surface flow</h3>
+        <p>One pass along the columns: where the height difference between neighbours exceeds what the material can hold, move the excess. Ten passes over 720 columns measured at 0.15 ms and forty passes at 0.36 ms, regardless of how much material is on the planet. This is what makes sand pile into slopes and water level out, and it is the cheapest part of the whole system.</p>
+      </section>
+
+      <section id="materials">
+        <div class="sec-eyebrow">Materials</div>
+        <h2>Two numbers give you water through solid rock</h2>
+        <p>The angle of repose is the steepest slope a granular material holds before it slides. It is a real, tabulated physical property, and it is the entire difference between sand and water in this model.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Material</th><th class="n">Angle of repose</th><th>Behaves as</th></tr></thead>
+          <tbody>
+            <tr><td>Water</td><td class="n">0°</td><td>Levels out completely, finds the lowest point</td></tr>
+            <tr><td>Water-filled sand</td><td class="n">15–30°</td><td>Slumps and spreads, holds a shallow bank</td></tr>
+            <tr><td>Dry sand</td><td class="n">34°</td><td>The classic cone</td></tr>
+            <tr><td>Granite (loose)</td><td class="n">35–40°</td><td>Coarse scree slope</td></tr>
+            <tr><td>Snow</td><td class="n">38°</td><td>Holds, then slides in sheets</td></tr>
+            <tr><td>Crushed stone, gravel</td><td class="n">45°</td><td>Steep, chunky, stable</td></tr>
+            <tr><td>Solid rock</td><td class="n">effectively 90°</td><td>Doesn't flow at all — vertical faces hold</td></tr>
+          </tbody>
+        </table></div>
+        <p>The second number is flow rate: how much of the excess moves per pass. High flow plus zero angle gives you water that sloshes level in a moment. Low flow plus a steep angle gives you tar that creeps. Between them sit every powder, gravel and slurry you need, and the elements from the design's tree each get their own pair.</p>
+        <div class="callout ok">
+          <p>This is the same solver for everything. One height field, two parameters. Real-time height-field sand and water research (Su et al., SIGGRAPH Asia 2023) runs 512×1024 to 1024×1024 grids at 0.46–3.54 ms per step, and explicitly compares against particle methods: full 3D material-point simulation of the same scene costs around 700 ms per step. Roughly two to three orders of magnitude, for behaviour that reads the same on screen.</p>
+        </div>
+      </section>
+
+      <section id="meteors">
+        <div class="sec-eyebrow">Impacts</div>
+        <h2>Meteors: field to flight, on a budget</h2>
+        <p>An impact is the transition running backwards. Read the field over the impact arc, remove material to carve the crater, and convert that mass into flight particles thrown outward.</p>
+        <p>The important detail is that <strong>the mass removed and the particles spawned are separate numbers.</strong> If an impact displaces enough material to justify fifty thousand particles, spawn five thousand and move the rest of the mass directly in the field. The crater is correct, the debris arc looks right, and nobody counts the grains. The budget is a hard cap on the spawn, and when the flight pool is full you settle the oldest particles rather than refusing to spawn — so a big impact never blows the frame.</p>
+        <p>The same budget covers the design's "meteors throw up all the loose particles" moment. Loose surface material within the blast radius is converted to flight up to the cap; beyond the cap it is simply redistributed in the field, which the surface flow pass then smooths out over the next second or two.</p>
+      </section>
+
+      <section id="ladder">
+        <div class="sec-eyebrow">Scaling</div>
+        <h2>Three tiers, each cheaper than the last</h2>
+        <p>The prototype is tier one. If it is not enough, there are two more steps, and the third is the one that actually ends the problem.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Tier</th><th>What the CPU does per particle per frame</th><th>Ceiling</th></tr></thead>
+          <tbody>
+            <tr><td><strong>1 · CPU flight</strong></td><td>Integrate, one field lookup, maybe deposit</td><td>Measured 81 ns in JS. GDScript will be several times slower, so realistically tens of thousands.</td></tr>
+            <tr><td><strong>2 · Shader flight</strong></td><td>Nothing. The vertex shader integrates from spawn data; the CPU only writes a slot on spawn.</td><td>Hundreds of thousands. This is what voxbench already does — it just needs radial gravity.</td></tr>
+            <tr class="good"><td><strong>3 · Cohort scheduling</strong></td><td>Nothing, and it doesn't even track them.</td><td>Effectively unbounded.</td></tr>
+          </tbody>
+        </table></div>
+        <h3>Why tier three ends it</h3>
+        <p>Ballistic motion is deterministic. A particle's entire future is fixed the moment it is launched. So the CPU does not need to watch it fly — it can work out at spawn time roughly when and where it will land, and put an entry in a list of pending deposits. Every frame it pops the deposits that are due. The particle itself is drawn by the GPU and never touched again.</p>
+        <p>Better still, particles launched in the same frame with similar parameters land at similar times. So schedule <em>cohorts</em>, not particles: one trajectory solve per cohort, one deposit event that spreads mass across a spread of columns. At a couple of hundred cohorts a second the CPU cost of the entire material system rounds to zero, whether the GPU is drawing ten thousand particles or a million.</p>
+        <p>The cost is a small loss of fidelity: the cohort deposits as a distribution rather than as individual grains landing. In a cross-section where each grain is a pixel or two, that is not a visible difference. It also breaks if a particle's path can change mid-flight — so anything that needs to be deflected, blown about or caught by a moving arm stays in tier two, which is fine, because that is a small minority.</p>
+      </section>
+
+      <section id="numbers">
+        <div class="sec-eyebrow">Measurements</div>
+        <h2>What it actually costs</h2>
+        <p>Simulation only, rendering excluded, single-threaded JavaScript on this machine. Same structure as the prototype: integrate, field test, deposit, plus ten relaxation passes.</p>
+        <div class="tbl"><table>
+          <thead><tr><th class="n">Particles in flight</th><th class="n">Sim ms/frame</th><th class="n">ns per particle</th><th class="n">Pairwise tests avoided</th></tr></thead>
+          <tbody>
+            <tr><td class="n">10,000</td><td class="n">0.95</td><td class="n">95</td><td class="n">5.0 × 10⁷</td></tr>
+            <tr><td class="n">50,000</td><td class="n">4.16</td><td class="n">83</td><td class="n">1.3 × 10⁹</td></tr>
+            <tr class="good"><td class="n">100,000</td><td class="n">8.20</td><td class="n">82</td><td class="n">5.0 × 10⁹</td></tr>
+            <tr><td class="n">250,000</td><td class="n">20.47</td><td class="n">82</td><td class="n">3.1 × 10¹⁰</td></tr>
+            <tr><td class="n">500,000</td><td class="n">40.32</td><td class="n">81</td><td class="n">1.3 × 10¹¹</td></tr>
+            <tr><td class="n">1,000,000</td><td class="n">80.61</td><td class="n">81</td><td class="n">5.0 × 10¹¹</td></tr>
+          </tbody>
+        </table></div>
+        <p>The per-particle cost is flat across two orders of magnitude, which is the point: the system is genuinely linear, with no hidden term that bites at scale. And the surface flow pass, which is doing the actual material behaviour, costs 0.15 ms at ten passes and 0.36 ms at forty — independent of both particle count and how much material the planet holds.</p>
+        <div class="callout warm">
+          <p><strong>Read this honestly.</strong> Those are JavaScript numbers. GDScript's interpreter is slower per element even over packed arrays — community measurements put typed GDScript at roughly 1.6× faster than untyped, and GDScript in general well behind C# and far behind native, though I could not find an authoritative current figure. Assume the CPU path in GDScript caps out somewhere in the tens of thousands, and plan on tier two or three rather than hoping.</p>
+        </div>
+      </section>
+
+      <section id="godot">
+        <div class="sec-eyebrow">Important</div>
+        <h2>Godot reality check, and a decision to revisit</h2>
+        <div class="callout bad">
+          <p><strong>The Compatibility renderer does not support compute shaders, RenderingDevice access, Texture2DRD, GPU particle SDF collision, particle trails, or <code>emit_particle()</code>.</strong> All of these are listed as "Not supported" for Compatibility in Godot's official renderer comparison. We picked Compatibility for voxbench on day one for the low-spec floor. That choice is now load-bearing and needs a deliberate second look.</p>
+        </div>
+        <p>The good news is that this architecture does not need any of them, and that is not a coincidence — it is a consequence of using a height field rather than a full cellular grid. A falling-sand simulation over a million cells genuinely wants compute. A 720-column height field is small enough to live on the CPU and be uploaded as a tiny texture.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Capability</th><th>Compatibility</th><th>Do we need it?</th></tr></thead>
+          <tbody>
+            <tr><td>Compute shaders</td><td>No</td><td>No — the field is 720 columns, not a million cells</td></tr>
+            <tr><td>Particle SDF collision</td><td>No</td><td>No — we collide against our own field, which is cheaper and gives us the deposit event</td></tr>
+            <tr><td>Vertex-shader particle motion</td><td>Yes</td><td>Yes, and this is tier two of the ladder</td></tr>
+            <tr><td>MultiMesh with custom data</td><td>Yes</td><td>Yes — already working in voxbench</td></tr>
+            <tr><td>SubViewport ping-pong</td><td>Yes</td><td>Only if we ever want the field on the GPU; RGBA8 and one frame of latency</td></tr>
+            <tr><td><code>emit_particle()</code></td><td>No</td><td>No — we spawn through MultiMesh slots ourselves</td></tr>
+          </tbody>
+        </table></div>
+        <h3>Two things to verify on the dev PC before committing</h3>
+        <p><strong>ImageTexture.update cost.</strong> There is a reported regression (Godot issue #76994) where a 1920×1080 <code>ImageTexture::update()</code> took 32–38 ms in Godot 4.0.2 against under 1 ms in 3.5. If that is still true in 4.4, any per-frame CPU-to-GPU image upload is dead. Our field texture would be tiny — 720×96 — so it is probably fine either way, but measure it rather than assume. There is also no partial-region update API, so you always upload the whole texture.</p>
+        <p><strong>MultiMesh buffer writes.</strong> Godot's own optimisation docs recommend <code>RenderingServer.multimesh_set_buffer()</code> with one linear <code>PackedFloat32Array</code> over per-instance setters, explicitly for cache efficiency, and say that for thousands of constantly-updated instances going through the servers directly is the recommended approach. I found no official quantified speedup, so measure it — but it is also the plan-B already written into the phase 0 build plan for the spike scenario.</p>
+        <p>One open issue worth knowing about: there is currently no way to have a compute shader write a MultiMesh buffer that stays GPU-resident without a CPU round trip (Godot issue #105113), and no partial buffer updates (proposal #957). Both constrain the clean version of tier two on the Vulkan renderers.</p>
+      </section>
+
+      <section id="field">
+        <div class="sec-eyebrow">Research</div>
+        <h2>What the games that do this actually do</h2>
+
+        <h3>Noita — the reference implementation</h3>
+        <p>From Petri Purho's GDC 2019 talk. The world is a grid of material IDs in 64×64 chunks. Each chunk keeps a dirty rect — the bounding box of what changed last frame — and a chunk with an empty dirty rect is skipped entirely. That is sleeping, expressed spatially. Threading is a four-pass checkerboard: each pass updates a set of non-adjacent chunks, and because a pixel can never move more than half a chunk in one pass, no two threads can touch the same region. No locks, no atomics.</p>
+        <p>Two details worth stealing outright. The update is single-buffered and runs bottom-to-top in place, which is <em>why</em> sand piles instead of smearing. And when a chunk of terrain is blasted free, Noita runs marching squares over the outline and hands the polygon to Box2D as a rigid body — a two-way conversion between field and object, which is the same pattern as our flight-and-deposit.</p>
+        <p>Nolla have never published a pixels-per-second figure, and the acknowledged failure mode is honest: when everything is moving at once, dirty rects stop helping and the frame rate goes with it.</p>
+
+        <h3>The numbers others have published</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Source</th><th>Scale</th><th>How</th></tr></thead>
+          <tbody>
+            <tr><td><strong>The Powder Toy</strong></td><td>235,008 particles, hard cap</td><td>Fixed 612×384 sim; particles in a flat array plus a <code>pmap</code> grid for O(1) spatial lookup. Single-threaded core. The cap is literally width × height.</td></tr>
+            <tr><td><strong>Sandspiel</strong></td><td>300×300 = 90,000 cells at 60 fps</td><td>Rust and wasm. Each cell is exactly 32 bits — species, two state bytes, and a clock byte that lets a single-buffered in-place update know whether a cell already moved this tick. The packing doubles as an RGBA texture upload with no conversion; render under 1 ms.</td></tr>
+            <tr><td><strong>Discrete particle sim</strong></td><td>700 → 17,000 at 60 fps</td><td>A documented seven-stage optimisation on one core: array-of-structures to structure-of-arrays, static arrays, then a uniform grid with a counting sort so each cell's indices are contiguous. 24× from memory layout, not better maths. Still two orders below Powder Toy's grid — that gap <em>is</em> the argument.</td></tr>
+            <tr><td><strong>Position Based Fluids</strong></td><td>100k–128k particles, 4.2–7.8 ms per substep</td><td>Macklin and Müller, on a GTX 680. Genuinely fluid, genuinely incompressible — and tens of constraint iterations per particle per frame against our one array read. Only worth it if you need splashes.</td></tr>
+            <tr><td><strong>Box2D islands</strong></td><td>10,010 bodies</td><td>Island bookkeeping went from 0.69 ms to 0.01 ms average with persistent islands. Relevant as the general lesson: at scale, the dominant optimisation is not running the update, not making it faster.</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>If we ever do want a real cellular grid</h3>
+        <p>Running falling-sand on the GPU hits one hard problem: two cells can both want to move into the same cell, and in a parallel write one silently wins, so mass is created or destroyed. The standard fix is the Margolus neighbourhood — partition into disjoint 2×2 blocks, let one thread decide all four cells together, and shift the partition origin on alternate steps so material can cross boundaries. It works, and its known artefact is that sand falls with visible gaps and a checkerboard rhythm because a grain can only move once per block phase. The cleaner alternative is a "pull" formulation where each cell asks what would move into it, so every thread writes only its own cell — structurally conflict-free, but awkward to express for liquids.</p>
+        <p>Worth knowing, not worth building. Our material is radially stratified around a centre, which a height field describes almost perfectly and a square grid describes badly.</p>
+      </section>
+
+      <section id="next">
+        <div class="sec-eyebrow">Actions</div>
+        <h2>What to change in voxbench</h2>
+        <ol>
+          <li><strong>Swap the gravity direction in <code>swarm.gdshader</code></strong> — acceleration toward a centre point instead of a constant downward vector. Already on the list from the design doc; it is a couple of lines.</li>
+          <li><strong>Add the field.</strong> A <code>PackedFloat32Array</code> of 720 column heights and a <code>PackedByteArray</code> of material bands, plus the deposit function. This is the new core.</li>
+          <li><strong>Add the landing test.</strong> On the CPU path it is the one array read shown above. On the GPU path the shader kills the particle visually at the surface and the CPU learns about the deposit through whichever tier you are on.</li>
+          <li><strong>Add the relaxation pass</strong> with per-material angle and flow. This is the cheapest thing in the whole system and the one that makes it look like a planet rather than a pile of dots.</li>
+          <li><strong>Add a "material" scenario to <code>scenarios.json</code></strong> — sustained deposit rate, a scripted meteor at a fixed time, and the field at late-game size — so the benchmark measures what the game will actually do rather than a debris shower.</li>
+          <li><strong>Re-run the renderer shoot-out with this in mind.</strong> Compatibility is still viable for this design, but the capability table above is the thing to weigh, and it is worth knowing what Forward+ buys before the project is too deep to move.</li>
+          <li><strong>Measure <code>ImageTexture.update()</code> on 4.4</strong> before relying on any CPU-to-GPU field upload.</li>
+        </ol>
+        <div class="callout ok">
+          <p><strong>The thing to hold on to.</strong> The number of particles you can afford is not a property of your collision code. It is a property of how long a particle stays a particle. Make landing cheap and immediate, and the count takes care of itself.</p>
+        </div>
+      </section>
+
+      <section id="sources">
+        <div class="sec-eyebrow">Sources</div>
+        <h2>Where this came from</h2>
+        <p><strong>Falling sand:</strong> <a href="https://www.gdcvault.com/play/1025695/Exploring-the-Tech-and-Design">Purho, "Exploring the Tech and Design of Noita", GDC 2019</a> (<a href="https://www.youtube.com/watch?v=prXuyMCgbTc">video</a>) · <a href="https://80.lv/articles/noita-a-game-based-on-falling-sand-simulation">80.lv interview</a> · <a href="https://maxbittker.com/making-sandspiel/">Making Sandspiel</a> · <a href="https://powdertoy.co.uk/Discussions/Thread/View.html?Thread=22019&amp;PageNum=0">Powder Toy particle cap</a> · <a href="https://winter.dev/articles/falling-sand-worlds">winter.dev, infinite falling-sand worlds</a>.</p>
+        <p><strong>GPU cellular automata:</strong> <a href="https://github.com/GelamiSalami/GPU-Falling-Sand-CA">GPU-Falling-Sand-CA</a> · <a href="https://en.wikipedia.org/wiki/Block_cellular_automaton">Block cellular automata / Margolus</a> · <a href="https://meatbatgames.com/blog/falling-sand-gpu/">falling sand on the GPU</a>.</p>
+        <p><strong>Height fields and repose:</strong> <a href="https://en.wikipedia.org/wiki/Angle_of_repose">Angle of repose</a> · <a href="https://kuiwuchn.github.io/RTWaterAndSand.pdf">Su et al., Real-time Height-field Simulation of Sand and Water Mixtures, SIGGRAPH Asia 2023</a> · <a href="https://docs.unity3d.com/Packages/com.unity.terrain-tools@5.0/manual/erosion-thermal.html">Unity thermal erosion</a> · <a href="https://www.sidefx.com/docs/houdini/nodes/sop/heightfield_slump.html">Houdini HeightField Slump</a>.</p>
+        <p><strong>Particles and sleeping:</strong> <a href="https://mmacklin.com/pbf_sig_preprint.pdf">Macklin &amp; Müller, Position Based Fluids</a> · <a href="https://github.com/ukasha167/Particle-Simulation">a documented spatial-hash optimisation journey</a> · <a href="https://box2d.org/posts/2023/10/simulation-islands/">Catto, Simulation Islands</a>.</p>
+        <p><strong>Godot:</strong> <a href="https://docs.godotengine.org/en/stable/tutorials/rendering/renderers.html">renderer comparison table</a> (the capability answers) · <a href="https://docs.godotengine.org/en/stable/tutorials/performance/using_multimesh.html">MultiMesh optimisation</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_imagetexture.html">ImageTexture</a> · <a href="https://github.com/godotengine/godot/issues/76994">issue 76994, update() regression</a> · <a href="https://github.com/godotengine/godot/issues/105113">issue 105113, MultiMesh GPU round-trip</a> · <a href="https://github.com/kiwijuice56/sand-slide">sand-slide, a Godot falling-sand in C++ GDExtension</a> · <a href="https://benchmarks.godotengine.org/">Godot benchmarks</a>.</p>
+        <p style="font-size:14px;color:var(--ink-3)">Uncertain or community-sourced, flagged as such in the text: Noita has no published throughput figure; the Powder Toy memory and frame-rate claims come from an AI-generated wiki (the 235,008 cap and grid structure are solid); GDScript-versus-C# ratios have no authoritative current source; no official figure exists for the MultiMesh buffer-write speedup. The measurements in this document are my own, in JavaScript, on the machine that generated it.</p>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+
+(function(){
+const W=440,H=440,CX=220,CY=220;
+const COLS=720,BANDS=96,R0=20,RMAX=198,PASSES=10,BANDT=(RMAX-R0)/BANDS,DTH=Math.PI*2/COLS,CAP=140000;
+const NAMES=['','Rock','Gravel','Water','Acid','Ice','Tar'];
+const PAL=[0,0xff6e6a62,0xffa8827f,0xffd8724f,0xff44c26c,0xffd8b27f,0xff4a4050];
+const REPOSE=[0,0.70,0.79,0.0,0.30,0.66,0.45];
+const FLOW=[0,0.30,0.22,0.95,0.55,0.35,0.60];
+const BG=0xff0d1018;
+let height,mat,live,curMat=1,target=40000,matClock=0;
+const px=new Float32Array(CAP),py=new Float32Array(CAP),vx=new Float32Array(CAP),vy=new Float32Array(CAP),pm=new Uint8Array(CAP);
+const colLut=new Uint16Array(W*H),rLut=new Float32Array(W*H);
+for(let y=0;y<H;y++)for(let x=0;x<W;x++){const dx=x-CX,dy=y-CY,i=y*W+x;rLut[i]=Math.sqrt(dx*dx+dy*dy);
+  let a=Math.atan2(dy,dx);if(a<0)a+=Math.PI*2;colLut[i]=Math.min(COLS-1,(a/DTH)|0);}
+const cv=document.getElementById('c'),ctx=cv.getContext('2d',{alpha:false});
+const img=ctx.createImageData(W,H),buf=new Uint32Array(img.data.buffer);
+function reset(){height=new Float32Array(COLS).fill(R0+3);mat=new Uint8Array(COLS*BANDS);live=0;}
+reset();
+function stepFlight(dt){
+  for(let i=0;i<live;i++){
+    const dx=px[i]-CX,dy=py[i]-CY,r=Math.sqrt(dx*dx+dy*dy)||1e-4,g=210/(0.4+r/RMAX);
+    vx[i]-=dx/r*g*dt;vy[i]-=dy/r*g*dt;px[i]+=vx[i]*dt;py[i]+=vy[i]*dt;
+    const nx=px[i]-CX,ny=py[i]-CY,nr=Math.sqrt(nx*nx+ny*ny);
+    let a=Math.atan2(ny,nx);if(a<0)a+=Math.PI*2;
+    const col=Math.min(COLS-1,(a/DTH)|0);
+    if(nr<=height[col]||nr>RMAX*2.4){
+      if(nr<=height[col]){
+        const b=Math.min(BANDS-1,Math.max(0,((height[col]-R0)/BANDT)|0));
+        mat[col*BANDS+b]=pm[i];height[col]=Math.min(RMAX-1,height[col]+0.07);
+      }
+      live--;px[i]=px[live];py[i]=py[live];vx[i]=vx[live];vy[i]=vy[live];pm[i]=pm[live];i--;
+    }
+  }
+}
+function relax(){
+  for(let p=0;p<PASSES;p++){const off=p&1;
+    for(let i=off;i<COLS;i+=2){const j=(i+1)%COLS,hi=height[i],hj=height[j],d=hi-hj;
+      if(d===0)continue;
+      const r=(hi+hj)*0.5,bi=Math.min(BANDS-1,Math.max(0,((hi-R0)/BANDT)|0)),m=mat[i*BANDS+bi]||curMat;
+      const maxD=Math.tan(REPOSE[m])*r*DTH,ad=d<0?-d:d;
+      if(ad>maxD){const mv=(ad-maxD)*0.5*FLOW[m];
+        if(d>0){height[i]-=mv;height[j]+=mv;const b=Math.min(BANDS-1,Math.max(0,((height[j]-R0)/BANDT)|0));mat[j*BANDS+b]=m;}
+        else{height[i]+=mv;height[j]-=mv;const b=Math.min(BANDS-1,Math.max(0,((height[i]-R0)/BANDT)|0));mat[i*BANDS+b]=m;}}}}
+}
+function meteor(){
+  const ang=Math.random()*Math.PI*2,c0=(ang/DTH)|0,wide=46;let mass=0;
+  for(let k=-wide;k<=wide;k++){const c=((c0+k)%COLS+COLS)%COLS,f=1-Math.abs(k)/wide;
+    const dig=Math.min(height[c]-R0-2,20*f*f);if(dig>0){height[c]-=dig;mass+=dig;}}
+  const budget=Math.min(14000,CAP-live,(mass*260)|0);
+  const rs=height[c0]+5,ex=CX+Math.cos(ang)*rs,ey=CY+Math.sin(ang)*rs;
+  for(let k=0;k<budget;k++){const a=ang+(Math.random()-0.5)*2.4,s=50+Math.random()*195;
+    px[live]=ex;py[live]=ey;vx[live]=Math.cos(a)*s;vy[live]=Math.sin(a)*s;pm[live]=1+((Math.random()*6)|0);live++;}
+}
+function draw(){
+  for(let i=0;i<W*H;i++){
+    const r=rLut[i];
+    if(r>RMAX+30){buf[i]=BG;continue;}
+    const c=colLut[i];
+    if(r<=height[c]){
+      if(r<R0){const t=1-r/R0;buf[i]=0xff000000|(255<<16)|((120+t*110)<<8)|(70+t*150);}
+      else{const b=Math.min(BANDS-1,((r-R0)/BANDT)|0),m=mat[c*BANDS+b];buf[i]=m?PAL[m]:PAL[1];}
+    }else buf[i]=BG;
+  }
+  for(let i=0;i<live;i++){const x=px[i]|0,y=py[i]|0;if(x>0&&y>0&&x<W&&y<H)buf[y*W+x]=PAL[pm[i]];}
+  ctx.putImageData(img,0,0);
+}
+const ro=document.getElementById('ro');
+let last=performance.now(),ms=0,f=0,running=true;
+function loop(t){
+  const dt=Math.min(0.033,(t-last)/1000);last=t;
+  const t0=performance.now();
+  if(live<target){const n=Math.min(1200,target-live);
+    for(let k=0;k<n&&live<CAP;k++){const a=Math.random()*Math.PI*2,s=118+Math.random()*150;
+      const c=Math.min(COLS-1,(a/DTH)|0),rs=height[c]+4;
+      px[live]=CX+Math.cos(a)*rs;py[live]=CY+Math.sin(a)*rs;
+      vx[live]=Math.cos(a)*s;vy[live]=Math.sin(a)*s;pm[live]=curMat;live++;}}
+  stepFlight(dt);relax();draw();
+  ms=ms?ms*0.92+(performance.now()-t0)*0.08:(performance.now()-t0);
+  if(++f%12===0){
+    const pair=live*(live-1)/2;
+    ro.innerHTML='in flight   <b>'+live.toLocaleString()+'</b>\n'
+      +'sim + draw  <span class="big">'+ms.toFixed(1)+' ms</span>\n'
+      +'per particle <b>'+(live?(ms*1e6/live).toFixed(0):0)+' ns</b>\n\n'
+      +'collision tests this frame\n  <b>'+live.toLocaleString()+'</b>  (one array read each)\n'
+      +'if particles collided with\neach other, it would be\n  <b>'+pair.toExponential(2)+'</b>';
+  }
+  if(running)requestAnimationFrame(loop);
+}
+const matsEl=document.getElementById('mats');
+for(let m=1;m<=6;m++){const b=document.createElement('button');b.type='button';b.textContent=NAMES[m];
+  b.className=m===curMat?'on':'';b.addEventListener('click',()=>{curMat=m;
+    [...matsEl.children].forEach((e,k)=>e.className=(k+1===m)?'on':'');});matsEl.appendChild(b);}
+document.getElementById('met').addEventListener('click',meteor);
+document.getElementById('rst').addEventListener('click',reset);
+const cnt=document.getElementById('cnt'),cntv=document.getElementById('cntv');
+cnt.addEventListener('input',()=>{target=+cnt.value;cntv.textContent=(+cnt.value).toLocaleString();});
+setTimeout(meteor,5000);
+requestAnimationFrame(loop);
+})();
+
+</script>
+
+</body></html>

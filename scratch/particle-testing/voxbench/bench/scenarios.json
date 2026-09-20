@@ -1,0 +1,14 @@
+{
+  "_doc": "Phase 0 scenarios. swarm = live instances to hold, spawn_rate = instances/s to keep it topped up, actors = pooled actor count, layers = visual layer bitmask (1 tint 2 glow 4 pulse 8 wobble 16 trail 32 emit), pass_p99_ms = pass rule. spike spawns everything in one frame.",
+  "warmup_s": 3.0,
+  "capture_s": 10.0,
+  "cooldown_s": 1.0,
+  "suite": ["idle", "mid", "late", "absurd", "spike"],
+  "scenarios": {
+    "idle":   { "swarm": 0,     "spawn_rate": 0,     "actors": 1,    "layers": 0,  "pass_p99_ms": 1.0,  "capacity": 1000  },
+    "mid":    { "swarm": 2000,  "spawn_rate": 800,   "actors": 200,  "layers": 7,  "pass_p99_ms": 2.0,  "capacity": 4000  },
+    "late":   { "swarm": 10000, "spawn_rate": 4000,  "actors": 500,  "layers": 63, "pass_p99_ms": 3.33, "capacity": 16000 },
+    "absurd": { "swarm": 50000, "spawn_rate": 20000, "actors": 1000, "layers": 63, "pass_p99_ms": 6.94, "capacity": 60000 },
+    "spike":  { "swarm": 10000, "spawn_rate": 0,     "actors": 0,    "layers": 63, "pass_p99_ms": 8.0,  "capacity": 16000, "spike": true, "spike_every_s": 2.5 }
+  }
+}

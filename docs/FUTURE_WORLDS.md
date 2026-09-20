@@ -1,0 +1,17 @@
+# Future world research
+
+This is a research backlog, not the active campaign order. The first Sun maths comes first. Each later world must teach one new process, unlock a useful material class, and automate an earlier chore.
+
+| Candidate world | Main problem | Likely unlock | Why it earns a level |
+| --- | --- | --- | --- |
+| Differentiating rocky seed | Separate metal from silicate while retaining impact mass | Iron, nickel, silicates | First solid planet. It turns basic collection into core and mantle construction. |
+| Tidally locked lava world | Move heat from a permanent day side and control atmospheric loss | Refractory minerals, sodium-bearing matter | Introduces orbit, heat transport, molten surfaces, and a reason to care about the finished star's luminosity. NASA describes observed lava-world candidates with large day-night temperature differences and tidal locking. [NASA on 55 Cancri e](https://science.nasa.gov/exoplanets/super-earth/) |
+| Sulfur photochemistry world | Produce and retain sulfur compounds under strong stellar light | Sulfur chemistry | Introduces atmospheric reactions. Webb detected sulfur dioxide produced by photochemistry in WASP-39 b. This supports the chemistry, not sulfur-based life. [NASA Webb overview](https://science.nasa.gov/mission/webb/science-overview/science-explainers/webbs-impact-on-exoplanet-research/) |
+| Ice shell ocean world | Balance ice thickness, tidal or internal heat, and plume loss | Water, ammonia, methane, cryovolcanic capture | Introduces subsurface oceans and makes volatile retention a construction problem. NASA treats Europa, Enceladus, and other bodies as ocean worlds, with organics and nitrogen-bearing molecules found in Enceladus plume material. [NASA Ocean Worlds](https://science.nasa.gov/solar-system/ocean-worlds/) |
+| Hycean sub-Neptune | Keep a hydrogen-rich atmosphere above a planet-wide ocean | High-pressure water chemistry, methane, carbon dioxide | Combines the gas and ocean systems instead of repeating either one. Hycean worlds remain a proposed class, not confirmed inhabited planets. [Madhusudhan, 2024](https://arxiv.org/abs/2406.12794) |
+| Carbon-rich carbide planet | Build with little water and a high carbon-to-oxygen ratio | Carbon compounds, silicon carbide, hydrocarbon chemistry | Creates a dry alternative to the silicate and water route. Carbon planets are theoretical, with predicted carbide interiors and hydrocarbon-rich surfaces or atmospheres. [Kuchner and Seager, 2005](https://arxiv.org/abs/astro-ph/0504214) |
+| Final life-bearing world | Hold a stable solvent, energy source, atmosphere, and cycling chemistry | Organic-life milestone | Combines the player's earlier star, material, heat, rotation, and atmosphere choices. Water-based life is the grounded default. Sulfur-rich or other paths need a separate evidence review before the game presents them as viable life. |
+
+NASA's broad exoplanet categories include terrestrial worlds, super-Earths, Neptune-like planets, gas giants, and water worlds. Those categories are useful starting points, but category alone is not enough for a level. [NASA exoplanet glossary](https://science.nasa.gov/exoplanets/glossary/)
+
+The strongest order is probably rocky seed, lava world, ice ocean world, gas or Hycean world, carbon-rich specialist world, then the final life-bearing planet. That order is not accepted yet. It needs a campaign simulation showing that every world changes the maths instead of changing only the art.
