@@ -87,9 +87,13 @@ func _seed_dense_rings() -> void:
 	var column_count := float(_particle_count) / float(system.COLUMNS)
 	var fitted_radius: float = sqrt(system.radius_squared_for_mass(column_count, column_count))
 	_main.zoom_level = minf(1.0, 320.0 / fitted_radius)
+	if _scenario == "visual-stress":
+		_main.grain_renderer.update_field(system, _main.get_viewport_rect().size * 0.5, _main.zoom_level)
+		_main.grain_renderer.debug_fill_visual_effects(float(system.time), float(system.grain_size))
 func _finish() -> void:
 	var draws: Dictionary = _main.grain_renderer.get_draw_counts()
 	print("PERF_INSTANCES settled=%d air=%d rim=%d" % [draws.settled, draws.air, int(draws.get("rim", 0))])
+	print("PERF_EFFECTS impacts=%d patches=%d" % [int(draws.get("impacts", 0)), int(draws.get("patches", 0))])
 	print("PERF_DUST active=%d visible=%d captured=%d" % [_main.ambient_dust.active_count, _main.dust_renderer.drawn_count, _main.dust_deposited])
 	if OS.get_cmdline_user_args().has("--capture"):
 		root.get_texture().get_image().save_png("res://../scratch/checks/field-%s-%d.png" % [_scenario, _particle_count])

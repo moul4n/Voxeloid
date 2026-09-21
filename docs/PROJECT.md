@@ -19,6 +19,8 @@ The active model stores up to 1,000,000,000 grains. Drawing uses a shared budget
 
 This replaces the earlier circle-collision solver. Settled positions sample the material field rather than represent independent collision bodies. Local overlap and arrivals are approximate. Material flows toward neighbouring regions with lower radial height. Hydrogen spreads around the core; rough profiles retain steeper slopes. Arrivals remain scheduled approximations. See `docs/SURFACE.md` for the model and limits. The previous solver remains in `core/voxel_system.gd`, with `legacy_surface_test.gd`, for reference.
 
+The renderer now blends neighbouring angular columns, so the 720-region simulation does not draw hard pie sections. Particles use stable shader variation for size, tint, selective local halo and incoming trails. The rim has several hashed sink, slide, bounce and spark motions. Large arrivals create one bounded impact event and one bonded patch when landing begins. Patch bases curve along the live body and settled grains cover their feathered upper edges. Batch-size-aware landing timing turns large arrivals into slower body-scale responses. The pools hold at most 32 impacts and 64 patches, stay attached to the live surface, and clear with the field. They are visual only and do not change counts, pressure or gameplay queries.
+
 Element parameters remain in `core/elements.gd`. The current simulation uses one element at a time. Sealing, heat, element fusion, mixed materials, purchase progression, ambient flybys, saves, caves, and overhangs are not implemented.
 
 The player core is separate from the planet or sun's body. Body matter now occupies a core, inner mantle, outer mantle and shallow crust/surface. Outer compaction remains manual. Inner densification transfers 90 percent of the current body core into a denser core, with 10 percent of the consumed portion's area, and preserves residual matter in surrounding layers. Only the converting section shudders and flickers. Layer sizes, mass thresholds, residual splits and labels are profile settings.
@@ -86,6 +88,19 @@ python -B -m unittest discover -s tools -p "test_*model.py" -v
 `surface_test.gd` runs the new field tests: conservation, capacity, arrivals, clear, periodic edges, material flow, fixed time steps, and footprint tuning. Smoke and rendered input checks cover startup, camera, spawning, developer controls, and reset. Images and logs are in ignored `scratch/checks/`.
 
 Arrival checks cover a 500,000-grain burst onto 750,000 deposited grains: gradual landing, visible rim motion, exact counts, shared drawing cap, fading and reset. Stable surface sampling removes the angular birth seam. Bulk fill uses mesh coordinates so uneven deposits align with their grains. On September 20, a separate rendered 750,000-grain flow check at zoom 0.334 drew 500,000 samples, averaging 417 FPS over three seconds (95th-percentile frame time 7.327 ms). That timing covers deposited flow, not the peak arrival effect.
+
+On September 21, 2026, the visual upgrade was measured on a different PC: Intel Core i9-10900, NVIDIA GeForce RTX 3070 with driver 595.95, Godot 4.7.2 Compatibility and VSync off. Each run used at least one second of warmup, 600 measured frames and at least three measured seconds. Ambient dust remained enabled. Counts can rise slightly from captured dust during the longer close-view runs.
+
+| Scenario | Untouched median FPS / p95 | Upgraded median FPS / p95 | Final drawn state |
+| --- | ---: | ---: | --- |
+| 100,000 settled | 58.4 / 31.392 ms | 61.5 / 25.900 ms | 100,032 settled |
+| 500,000 settled | 57.2 / 30.365 ms | 59.6 / 26.851 ms | 498,437 settled, 795 rim |
+| 500,000 incoming | 208.8 / 6.868 ms | 230.7 / 5.965 ms | 499,232 incoming |
+| 500,000 one-sided flow | 57.4 / 29.163 ms | 59.5 / 27.323 ms | 498,155 settled, 1,077 rim |
+| 1 billion logical settled | 280.1 / 5.647 ms | 247.2 / 6.966 ms | 499,232 settled at zoom 0.010 |
+| 500,000 visual stress | n/a | 58.4 / 28.482 ms | 498,179 settled, 1,053 rim, 32 impacts, 64 patches |
+
+Normal close and medium scenarios improved on this PC. The isolated billion-grain far-view repeat was slower than its initial baseline and exceeded the 10 percent p95 investigation threshold. Its instance count and logical work stayed bounded, but the run-to-run GPU variance remains unresolved. Treat that row as a follow-up measurement, not a claimed improvement.
 
 On September 20, 2026, rendered tests on the local RTX 4070 used Compatibility, VSync off, at least one second of warmup and three seconds of measurement:
 

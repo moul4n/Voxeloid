@@ -15,7 +15,7 @@ func run() -> void:
 	main.voxels.spawn_grains(500000, -PI / 4.0)
 	for tick in 204:
 		main.voxels.step(1.0 / 60.0)
-		if tick in [83, 113, 125, 155, 203]:
+		if tick in [35, 83, 113, 125, 155, 203]:
 			await process_frame
 			main.grain_renderer.update_field(main.voxels, main.get_viewport_rect().size * 0.5, main.zoom_level)
 			var draws: Dictionary = main.grain_renderer.get_draw_counts()
@@ -23,7 +23,7 @@ func run() -> void:
 			check(int(draws.settled) + int(draws.air) + rim <= 500000, "arrival exceeded shared draw budget")
 			check(rim <= 2048, "rim grew beyond its fixed pool")
 			check(absf(main.voxels.total_mass() - 1250000.0) < 0.01, "landing lost material")
-			if tick == 83:
+			if tick == 35:
 				check(main.voxels.settled_count == 750000 and rim == 0, "rim appeared before impact")
 			if tick == 113:
 				check(main.voxels.settled_count > 750000 and main.voxels.settled_count < 1250000 and rim > 0, "large arrival did not settle progressively onto rim")

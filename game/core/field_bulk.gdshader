@@ -21,6 +21,20 @@ uniform float conversion_progress = 0.0;
 uniform bool conversion_active = false;
 varying vec2 local_point;
 
+vec2 angular_field_position(vec2 point) {
+	float coordinate = mod(atan(point.y, point.x), TAU) * (720.0 / TAU);
+	return vec2(floor(coordinate), fract(coordinate));
+}
+
+vec4 smooth_field_value(vec2 angular_position, int row) {
+	int lower = int(angular_position.x) % 720;
+	int upper = (lower + 1) % 720;
+	return mix(
+		texelFetch(field_texture, ivec2(lower, row), 0),
+		texelFetch(field_texture, ivec2(upper, row), 0),
+		angular_position.y);
+}
+
 float hash21(vec2 p) {
 	p = fract(p * vec2(123.34, 456.21));
 	p += dot(p, p + 45.32);
@@ -91,24 +105,24 @@ void fragment() {
 			}
 		}
 	} else if (radius > compacted_radius) {
-		// Near three o'clock, float rounding can turn a tiny negative angle
-		// into exactly TAU. Wrap the integer too; texel 720 is outside the field.
-		int column = int(floor(mod(atan(point.y, point.x), TAU) * (720.0 / TAU))) % 720;
+		// Geometry drives angular lookup because QuadMesh UVs reverse canvas Y.
+		// Blend the wrapped neighbouring columns without changing the 720-column solver.
+		vec2 angular_position = angular_field_position(point);
 		float rsq = radius * radius;
-		float inner = texelFetch(field_texture, ivec2(column, 1), 0).r;
-		float outer = texelFetch(field_texture, ivec2(column, 17), 0).r;
+		float inner = smooth_field_value(angular_position, 1).r;
+		float outer = smooth_field_value(angular_position, 17).r;
 		// Fill to the physical core boundary, including the grain-centre offset.
 		if (rsq <= outer) {
 			int low = 0;
 			int high = 16;
 			for (int i = 0; i < 5; i++) {
 				int mid = (low + high) / 2;
-				if (texelFetch(field_texture, ivec2(column, mid + 1), 0).r < rsq) { low = mid + 1; }
+				if (smooth_field_value(angular_position, mid + 1).r < rsq) { low = mid + 1; }
 				else { high = mid; }
 			}
 			int upper = clamp(low, 1, 16);
-			vec2 a = texelFetch(field_texture, ivec2(column, upper), 0).rg;
-			vec2 b = texelFetch(field_texture, ivec2(column, upper + 1), 0).rg;
+			vec2 a = smooth_field_value(angular_position, upper).rg;
+			vec2 b = smooth_field_value(angular_position, upper + 1).rg;
 			float packing = mix(a.y, b.y, clamp((rsq - a.x) / max(b.x - a.x, 0.00001), 0.0, 1.0));
 			density = clamp((packing - loose_packing) / max(max_packing - loose_packing, 0.001), 0.0, 1.0);
 			alpha = smoothstep(0.12, 0.48, density);

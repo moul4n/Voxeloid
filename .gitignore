@@ -2,4 +2,5 @@
 .ignore/
 scratch/checks/
 godot.local.txt
+tools/godot/
 *.tmp

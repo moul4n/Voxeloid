@@ -792,12 +792,17 @@ func _land_due_batches() -> bool:
 	while index < batches.size():
 		var batch: Dictionary = batches[index]
 		var end_time := float(batch.birth) + float(batch.duration)
-		var landing_span := minf(maxf(float(material.get("impact_settle_seconds", 0.55)), 0.01), float(batch.duration) * 0.35)
+		var total := int(batch.get("arrival_total", batch.amount))
+		# Small inputs keep their direct response. Large arrivals apply their load
+		# over a longer interval so a thin shell develops one broad, damped body
+		# response instead of a sequence of sharp whole-ring corrections.
+		var impact_scale := clampf(log(float(total) + 1.0) / log(500001.0), 0.0, 1.0)
+		var settle_seconds := maxf(float(material.get("impact_settle_seconds", 0.55)), 0.01)
+		var landing_span := minf(settle_seconds * lerpf(1.0, 2.2, impact_scale), float(batch.duration) * 0.68)
 		if time + 0.0000001 < end_time - landing_span:
 			break
 		var progress := clampf((time - end_time + landing_span + 0.0000001) / landing_span, 0.0, 1.0)
 		progress = progress * progress * (3.0 - 2.0 * progress)
-		var total := int(batch.get("arrival_total", batch.amount))
 		var delivered := int(batch.get("landed", 0))
 		var landing := mini(int(batch.amount), maxi(int(floor(float(total) * progress)) - delivered, 0))
 		if landing > 0:
