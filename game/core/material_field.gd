@@ -53,6 +53,7 @@ var count := 0
 var settled_count := 0
 var rim_activity := PackedFloat32Array()
 var last_landing_time := -1000.0
+var _impact_disturbance := 0.0
 # Settled grains converted by an explicit player action.  They are no longer
 # stored in the flowing columns, but remain part of the exact logical count.
 var compacted_count := 0
@@ -175,7 +176,7 @@ func capture_ambient_batch(captures: Array[Dictionary]) -> int:
 	return accepted_total
 
 
-func spawn_grains(amount: int = 1, source_angle: float = NAN) -> void:
+func spawn_grains(amount: int = 1, source_angle: float = NAN, source_radius: float = NAN) -> void:
 	var accepted := mini(maxi(amount, 0), capacity - count)
 	if accepted <= 0:
 		return
@@ -193,7 +194,7 @@ func spawn_grains(amount: int = 1, source_angle: float = NAN) -> void:
 		"angle": angle,
 		"birth": time,
 		"duration": duration,
-		"start_radius": maxf(360.0, target + 240.0),
+		"start_radius": maxf(source_radius, target + grain_size) if is_finite(source_radius) else maxf(360.0, target + 240.0),
 		"end_radius": target,
 		"seed": seed_counter,
 		"spread": _deposit_arc(),
@@ -216,8 +217,11 @@ func step(delta: float) -> void:
 
 func _simulate(delta: float) -> void:
 	time += delta
+	if sun_progression != null:
+		sun_progression.step(delta)
 	var changed := _advance_core_compaction(delta)
 	changed = _land_due_batches() or changed
+	_impact_disturbance = move_toward(_impact_disturbance, 0.0, delta * 0.55)
 	# Only nested layers may be automated after an upgrade unlock.  Forming the
 	# outer planet core is always an explicit player action.
 	if not compaction_active and inner_automation_unlocked and inner_automation_enabled:
@@ -276,6 +280,7 @@ func seed_uniform(amount: int) -> void:
 		sun_progression = SunProgression.new()
 	rim_activity.fill(-1000.0)
 	last_landing_time = -1000.0
+	_impact_disturbance = 0.0
 	# Benchmark setup: fill every angular sector evenly, with no flight queue.
 	# This has no particle array and gives renderers a stable 100k/500k surface.
 	var accepted := clampi(amount, 0, capacity)
@@ -432,8 +437,13 @@ func _advance_core_compaction(delta: float) -> bool:
 	var shudder := (_compaction_start_area - _compaction_target_area) * 0.035 * compaction_pulse
 	_set_compacted_area(clampf(nominal_area + shudder, _compaction_target_area, _compaction_start_area))
 	_refresh_animation_window()
-	_set_loose_base_radius()
-	_rebuild_heights()
+	# Inner densification only changes bound layers. Rebuilding all 720 loose
+	# radial lookups every fixed tick caused a needless click-time slowdown.
+	# Keep the loose field stable during the short animation and reconcile it
+	# once when the conversion finishes.
+	if _inner_compaction_source_index < 0:
+		_set_loose_base_radius()
+		_rebuild_heights()
 	if compaction_progress >= 1.0:
 		compaction_active = false
 		compaction_pulse = 0.0
@@ -573,6 +583,8 @@ func compact_inner_layer(force: bool = false) -> bool:
 	# yields one layer per crossed threshold, not every fixed simulation tick.
 	_inner_next_automation_mass = maxf(_inner_next_automation_mass * _inner_automation_multiplier,
 		_total_collected_mass * _inner_automation_multiplier)
+	if sun_progression != null:
+		sun_progression.record_inner_densification()
 	revision += 1
 	return true
 
@@ -762,7 +774,7 @@ func sample_seed(particle_index: int) -> float:
 func _append_batch(batch: Dictionary) -> void:
 	if not batches.is_empty():
 		var previous: Dictionary = batches[batches.size() - 1]
-		if previous.birth == batch.birth and is_equal_approx(previous.angle, batch.angle):
+		if previous.birth == batch.birth and is_equal_approx(previous.angle, batch.angle) and is_equal_approx(float(previous.start_radius), float(batch.start_radius)):
 			previous.amount = int(previous.amount) + int(batch.amount)
 			previous.arrival_total = int(previous.get("arrival_total", previous.amount - batch.amount)) + int(batch.amount)
 			batches[batches.size() - 1] = previous
@@ -796,7 +808,7 @@ func _land_due_batches() -> bool:
 		# Small inputs keep their direct response. Large arrivals apply their load
 		# over a longer interval so a thin shell develops one broad, damped body
 		# response instead of a sequence of sharp whole-ring corrections.
-		var impact_scale := clampf(log(float(total) + 1.0) / log(500001.0), 0.0, 1.0)
+		var impact_scale := _large_impact_scale(total)
 		var settle_seconds := maxf(float(material.get("impact_settle_seconds", 0.55)), 0.01)
 		var landing_span := minf(settle_seconds * lerpf(1.0, 2.2, impact_scale), float(batch.duration) * 0.68)
 		if time + 0.0000001 < end_time - landing_span:
@@ -806,7 +818,8 @@ func _land_due_batches() -> bool:
 		var delivered := int(batch.get("landed", 0))
 		var landing := mini(int(batch.amount), maxi(int(floor(float(total) * progress)) - delivered, 0))
 		if landing > 0:
-			_deposit(landing, float(batch.angle))
+			_deposit(landing, float(batch.angle), total)
+			_impact_disturbance = maxf(_impact_disturbance, impact_scale)
 			settled_count += landing
 			batch.amount = int(batch.amount) - landing
 			batch.landed = delivered + landing
@@ -822,10 +835,14 @@ func _land_due_batches() -> bool:
 func _deposit_arc() -> float:
 	return DEPOSIT_ARC * clampf(float(material.get("impact_spread", 1.0)), 0.1, 2.0)
 
-func _deposit(amount: int, angle: float) -> void:
+func _deposit(amount: int, angle: float, impact_total: int = 0) -> void:
 	last_landing_time = time
 	var centre := _column_for_angle(angle)
-	var half_width := maxi(1, int(ceil(_deposit_arc() * 0.5 / _angle_step())))
+	var impact_scale := _large_impact_scale(maxi(impact_total, amount))
+	# Large bodies splash across a wider section instead of pulling a narrow
+	# spike out of the whole shell. Small arrivals retain the material profile.
+	var spread_arc := minf(_deposit_arc() * lerpf(1.0, 3.1, impact_scale), 0.90)
+	var half_width := maxi(1, int(ceil(spread_arc * 0.5 / _angle_step())))
 	var weights := PackedFloat64Array()
 	weights.resize(half_width * 2 + 1)
 	var weight_sum := 0.0
@@ -860,7 +877,8 @@ func _redistribute(delta: float) -> bool:
 	# governed by grain size, pressure packing and conserved particle count.
 	var mobility := flow_rate / (flow_rate + 600.0)
 	var resistance := (1.0 - friction) / (1.0 + damping * 2.0 + sqrt(material_mass) * 0.3)
-	var angular_diffusion := 3.5 * gravity * mobility * resistance
+	var impact_flow_scale := lerpf(1.0, 0.38, clampf(_impact_disturbance, 0.0, 1.0))
+	var angular_diffusion := 3.5 * gravity * mobility * resistance * impact_flow_scale
 	# Positive-repose material needs a tiny open contact to transmit a slope
 	# beyond the initial deposit.  It remains much slower than low-friction gas.
 	var creep := maxf(float(material.get("compaction_creep", 0.0)), 0.0)
@@ -1063,6 +1081,10 @@ func _set_loose_base_radius() -> void:
 
 func _angle_step() -> float:
 	return TAU / float(COLUMNS)
+
+
+func _large_impact_scale(amount: int) -> float:
+	return smoothstep(10000.0, 500000.0, float(maxi(amount, 0)))
 
 
 func _wrap_angle(angle: float) -> float:

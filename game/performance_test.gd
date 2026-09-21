@@ -83,6 +83,11 @@ func _seed_dense_rings() -> void:
 		system.spawn_grains(_particle_count - system.count, -PI * 0.25)
 	else:
 		system.seed_uniform(_particle_count)
+	if _scenario == "compaction":
+		# Hold the existing conversion visuals active for the full measurement.
+		# This is a benchmark override, not a gameplay duration change.
+		system.material["core_layer_duration"] = 100.0
+		system.form_core_layer(true)
 	# Fit all deposited matter in the view; print zoom with every result.
 	var column_count := float(_particle_count) / float(system.COLUMNS)
 	var fitted_radius: float = sqrt(system.radius_squared_for_mass(column_count, column_count))
@@ -98,6 +103,7 @@ func _finish() -> void:
 	if OS.get_cmdline_user_args().has("--capture"):
 		root.get_texture().get_image().save_png("res://../scratch/checks/field-%s-%d.png" % [_scenario, _particle_count])
 	print("PERF_SCENE scenario=%s zoom=%.3f count=%d deposited=%d incoming=%d" % [_scenario, _main.zoom_level, _main.voxels.count, _main.voxels.settled_count, _main.voxels.count - _main.voxels.settled_count])
+	print("PERF_VIEW width=%d height=%d" % [root.get_texture().get_width(), root.get_texture().get_height()])
 	var total_ms := 0.0
 	for frame_ms in _frame_times:
 		total_ms += frame_ms

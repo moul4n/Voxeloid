@@ -34,7 +34,13 @@ func _initialize() -> void:
 		var state: Dictionary = field.get_sun_visual_state()
 		check(bool(state.ignited) == (index >= 3), "75 SMU ignition gate mismatch")
 		if index == 1:
+			var production_before := float(state.total_production_reward)
+			var temperature_before := float(state.temperature)
 			check(field.compact_inner_layer(), "second compact should unlock core densification")
+			var dense_state: Dictionary = field.get_sun_visual_state()
+			check(int(dense_state.densification_count) == 1, "inner densification was not counted")
+			check(is_equal_approx(float(dense_state.total_production_reward), production_before * 1.12), "inner densification did not add its production reward")
+			check(float(dense_state.temperature) > temperature_before and float(dense_state.densification_heat) > 0.0, "inner densification did not create a visible heat pulse")
 			finish(field)
 			check(field.get_body_layers().size() == 2, "early Sun zones should remain separate")
 		if index == 3:

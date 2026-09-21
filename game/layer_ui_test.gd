@@ -42,8 +42,13 @@ func run() -> void:
 	for zoom in [2.2, 1.0, 0.32, 0.01, 0.002]:
 		main.zoom_level = zoom
 		var rings: Array[float] = main.range_ring_radii(Vector2(1280, 800), Vector2(640, 400))
-		check(rings.size() >= 3 and rings.size() <= 31, "range rings do not cover zoom")
-		check(rings[0] * zoom >= 100.0 and rings[0] * zoom <= 275.0, "range ring spacing is unreadable")
+		check(rings.size() <= 31, "range rings exceeded their fixed limit")
+		for radius in rings:
+			check(radius > main.voxels.max_height, "range ring remained inside the material edge")
+	main.voxels.clear()
+	var empty_rings: Array[float] = main.range_ring_radii(Vector2(1280, 800), Vector2(640, 400))
+	check(not empty_rings.is_empty(), "range rings did not return after the mass shrank")
+	main.voxels.seed_uniform(750000)
 	main.zoom_level = 0.32
 	await capture(main, "loose-750k")
 	click_layer(main, false)

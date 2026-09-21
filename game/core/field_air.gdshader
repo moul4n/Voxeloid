@@ -67,9 +67,12 @@ void vertex() {
 	uint local_id = uint(floor(batch_fraction * batch_amount));
 	uint identity = local_id ^ uint(max(visual_epoch, 0)) * 747796405u ^ uint(max(batch_b.a, 0.0));
 	float angle_jitter = random01(local_id ^ uint(max(batch_b.a, 0.0)));
-	float angle = batch_a.g + (angle_jitter - 0.5) * batch_b.b;
 	float duration = max(batch_a.a, 0.0001);
 	float progress = clamp((simulation_time - batch_a.b) / duration, 0.0, 1.0);
+	// All samples begin directly behind the screen-anchored singularity. The
+	// arrival fan opens only after they have cleared the button.
+	float fan_open = smoothstep(0.03, 0.45, progress);
+	float angle = batch_a.g + (angle_jitter - 0.5) * batch_b.b * fan_open;
 	int column = int(floor(mod(angle, TAU) * (float(FIELD_COLUMNS) / TAU))) % FIELD_COLUMNS;
 	// Keep the trajectory inward.  A growing surface may occlude it, but never
 	// pushes a visible particle back out through the field.

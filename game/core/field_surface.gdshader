@@ -54,30 +54,47 @@ float random01(uint value) {
 void vertex() {
 	int particle_id = INSTANCE_ID;
 	uint identity = uint(particle_id) ^ uint(max(visual_epoch, 0)) * 747796405u;
+	uint pair_id = uint(particle_id / 2);
+	bool reverse_search = (particle_id & 1) == 1;
 	float area_jitter = random01(uint(particle_id) * 2u + 91u);
 	// Stable sampling: appending grains must not start at the end of the
 	// angular CDF or move every existing sample just because count changed.
-	float quantile = random01(uint(particle_id) * 3u + 173u);
+	float pair_quantile = random01(pair_id * 3u + 173u);
+	// Reverse-CDF partners use the complementary quantile. On an even field
+	// this places both members of a pair at the same angle; when local mass is
+	// added, they then peel away from that point in opposite directions. Using
+	// the same quantile here would put the partner across the body and only
+	// balance the motion globally, leaving each local area visibly one-sided.
+	float quantile = reverse_search ? 1.0 - pair_quantile : pair_quantile;
 
 	int low = 0;
 	int high = FIELD_COLUMNS - 1;
 	for (int search = 0; search < SEARCH_STEPS; search++) {
 		int middle = (low + high) / 2;
-		float cumulative = texelFetch(field_texture, ivec2(middle, 0), 0).r;
+		int texture_column = reverse_search ? FIELD_COLUMNS - 1 - middle : middle;
+		float cumulative = reverse_search ?
+			texelFetch(field_texture, ivec2(texture_column, 0), 0).a :
+			texelFetch(field_texture, ivec2(texture_column, 0), 0).r;
 		if (cumulative < quantile) {
 			low = middle + 1;
 		} else {
 			high = middle;
 		}
 	}
-	int column = min(low, FIELD_COLUMNS - 1);
-	float cdf_end = texelFetch(field_texture, ivec2(column, 0), 0).r;
+	int logical_column = min(low, FIELD_COLUMNS - 1);
+	int column = reverse_search ? FIELD_COLUMNS - 1 - logical_column : logical_column;
+	float cdf_end = reverse_search ?
+		texelFetch(field_texture, ivec2(column, 0), 0).a :
+		texelFetch(field_texture, ivec2(column, 0), 0).r;
 	float cdf_begin = 0.0;
-	if (column > 0) {
-		cdf_begin = texelFetch(field_texture, ivec2(column - 1, 0), 0).r;
+	if (logical_column > 0) {
+		cdf_begin = reverse_search ?
+			texelFetch(field_texture, ivec2(column + 1, 0), 0).a :
+			texelFetch(field_texture, ivec2(column - 1, 0), 0).r;
 	}
 	float column_mass = max(cdf_end - cdf_begin, 0.000001);
-	float column_fraction = clamp((quantile - cdf_begin) / column_mass, 0.0, 1.0);
+	float travel_fraction = clamp((quantile - cdf_begin) / column_mass, 0.0, 1.0);
+	float column_fraction = reverse_search ? 1.0 - travel_fraction : travel_fraction;
 	float angle = (float(column) + column_fraction) * (TAU / float(FIELD_COLUMNS));
 	float lookup_position = area_jitter * float(RADIAL_LOOKUP_SAMPLES);
 	int lookup_low = int(floor(lookup_position));

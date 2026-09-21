@@ -27,7 +27,7 @@ func run() -> void:
 	var event := InputEventMouseButton.new()
 	event.button_index = MOUSE_BUTTON_LEFT
 	event.pressed = true
-	event.position = main.SunHud.player_button_rect().get_center()
+	event.position = main.core_action_rect().get_center()
 	main._unhandled_input(event)
 	check(main.voxels.sun_progression.player_level == 1 and main.voxels.count == 6000, "HUD absorb button did not transfer loose mass")
 	check(main.voxels.form_core_layer(), "first HUD layer not ready")
@@ -43,7 +43,16 @@ func run() -> void:
 			await capture(main, "compress-%d" % (index + 2))
 		finish(main.voxels)
 		if index == 1:
-			check(main.voxels.compact_inner_layer(), "stellar core milestone failed")
+			main._refresh_progression()
+			check(main._is_unlocked(&"action.compact_inner"), "stellar core densification action did not unlock")
+			event.position = main.inner_button_rect(main.get_viewport_rect().size).get_center()
+			main._unhandled_input(event)
+			check(main.voxels.compaction_active, "stellar core milestone failed")
+			var dense_state: Dictionary = main.voxels.get_sun_visual_state()
+			check(float(dense_state.total_production_reward) > float(dense_state.production_reward), "densification reward was not shown in total production")
+			check(main._is_unlocked(&"indicator.heat"), "densification did not reveal the heat indicator")
+			await create_timer(0.42).timeout
+			await capture(main, "densification-reward")
 			finish(main.voxels)
 		if index == 2:
 			await capture(main, "ignition")
@@ -57,8 +66,9 @@ func run() -> void:
 	main._unhandled_input(event)
 	check(main.voxels.sun_progression.player_level == 0, "normal Ctrl-click bypassed player cost")
 	main.developer_mode = true
+	event.position = main.core_action_rect().get_center()
 	main._unhandled_input(event)
 	check(main.voxels.sun_progression.player_level == 1 and main.voxels.sun_progression.absorbed_mass == 0.0, "dev Ctrl-click did not grant a genuinely free level")
 	if failures == 0:
-		print("Sun UI checks passed: absorb input, seed/ignition/solar captures, separate player state, no automatic spin.")
+		print("Sun UI checks passed: absorb input, densification reward, ignition/solar captures, separate player state, no automatic spin.")
 	quit(1 if failures else 0)

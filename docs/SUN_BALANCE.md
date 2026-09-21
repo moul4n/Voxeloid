@@ -2,7 +2,7 @@
 
 `tools/sun_model.py` is the detailed planning model for the first Sun. It supersedes the coarse Sun stage inside `tools/progression_model.py` for design work. The campaign model still estimates the full run.
 
-The playable prototype is documented in [Sun progression and presentation](SUN_PHASE.md). It now shares this model's seven layer requirements, 1,000 SMU target and fifteen-level Core cap. The Python model additionally runs production, talent, stellar-profile and helium rules that are not yet wired into Godot.
+The playable prototype is documented in [Sun progression and presentation](SUN_PHASE.md). It now shares this model's seven layer requirements, 1,000 SMU target and fifteen-level Core cap. The live prototype temporarily allows ten ranks in each opening talent so production can be tested across a wider range. The Python timing results below still use the older 1/5/5 opening caps and must be rebalanced before they are treated as current pacing evidence.
 
 ## Physical anchors and game units
 
@@ -84,7 +84,7 @@ C_n = 20\times1.8^{n-1}
 
 Efficient Assimilation reduces future costs by 10 percent per rank. It does not refund levels already bought.
 
-The current Core tree contains 40 ranks. The Sun supplies at most 15 points, so no first-Sun build can take everything. The full campaign should add more branches and finish with fewer points than its total rank count. A build must leave useful nodes behind.
+The current prototype Core tree contains 59 ranks after expanding its opening row. The Sun supplies at most 15 points, so no first-Sun build can take everything. The full campaign should add more branches and finish with fewer points than its total rank count. A build must leave useful nodes behind.
 
 ## Campaign point budget proposal
 
@@ -106,13 +106,13 @@ Each body should keep a separate tree near 21 ranks and award seven local points
 
 ## Core talent tree
 
-Low nodes are available immediately unless the table gives a point requirement.
+The live tutorial requires one Automatic Invocation rank before the other two opening nodes. Later ranks follow the spent-point gates below.
 
 | Talent | Ranks | Requires spent | Effect per rank |
 | --- | ---: | ---: | --- |
-| Automatic Invocation | 1 | 0 | Enables one automatic activation each second |
-| Resonant Pull | 5 | 0 | 15 percent more mass per singularity activation |
-| Rapid Recovery | 5 | 0 | 1.6 times automatic activation rate |
+| Automatic Invocation | 10 | 0 | Adds one automatic activation each second |
+| Resonant Pull | 10 | 0 | 15 percent more mass per singularity activation; requires Automatic Invocation |
+| Rapid Recovery | 10 | 0 | 1.6 times automatic activation rate; requires Automatic Invocation |
 | Efficient Assimilation | 4 | 2 | 10 percent lower future Core level costs |
 | Gravity Focus | 4 | 3 | 6 percent better singularity capture and 15 percent better ambient capture |
 | Mass Lattice | 5 | 3 | Adds 0.06 to the logarithmic Core-mass benefit |
@@ -231,6 +231,7 @@ python -B -m unittest discover -s tools -p "test_sun_model.py" -v
 ## Decisions to test next
 
 - Whether fifteen Core points arrive too quickly during the first Sun.
+- Re-run every route after the temporary 10/10/10 opening talent caps are added to the Python model.
 - Whether a 5 hour 26 minute no-upgrade hold run is an acceptable failure case or still too generous.
 - Whether Core-mass and thermal builds need a small Sun benefit, or whether their later-body advantage is enough.
 - Whether helium discovery should stay near eight minutes after ignition or become a talent-dependent milestone.

@@ -60,6 +60,10 @@ var _logical_settled_count := 0
 var _logical_air_count := 0
 var _logical_rim_count := 0
 var _last_rim_slot_update := -1000.0
+var _visual_heat := 0.0
+var _visual_ignition := 0.0
+var _last_visual_state_time := -1.0
+var _visual_state_initialized := false
 
 const MAX_RIM_INSTANCES := 2048
 const RIM_LIFETIME := 1.2
@@ -85,6 +89,8 @@ func update_field(solver, center: Vector2, zoom: float) -> void:
 		_last_epoch = -1
 		_last_rim_slot_update = -1000.0
 		_logical_rim_count = 0
+		_visual_state_initialized = false
+		_last_visual_state_time = -1.0
 		_clear_visual_effects()
 	var epoch := int(solver.epoch)
 	var revision := int(solver.revision)
@@ -132,17 +138,31 @@ func update_field(solver, center: Vector2, zoom: float) -> void:
 	_bulk_material.set_shader_parameter("max_packing", _maximum_stage_packing(material_data))
 	_bulk_material.set_shader_parameter("darkening", float(material_data.get("compaction_depth_darkening", 0.2)))
 	var sun_state: Dictionary = solver.call("get_sun_visual_state") if solver.has_method("get_sun_visual_state") else {}
+	var target_heat := clampf(float(sun_state.get("heat", 0.0)), 0.0, 1.0)
+	var target_ignition := 1.0 if bool(sun_state.get("ignited", false)) else 0.0
+	if not _visual_state_initialized or simulation_time < _last_visual_state_time:
+		_visual_heat = target_heat
+		_visual_ignition = target_ignition
+		_visual_state_initialized = true
+	else:
+		var visual_delta := clampf(simulation_time - _last_visual_state_time, 0.0, 0.1)
+		var heat_blend := 1.0 - exp(-visual_delta / 1.6)
+		var ignition_blend := 1.0 - exp(-visual_delta / 2.2)
+		_visual_heat = lerpf(_visual_heat, target_heat, heat_blend)
+		_visual_ignition = lerpf(_visual_ignition, target_ignition, ignition_blend)
+	_last_visual_state_time = simulation_time
 	var surface_tint := grain_tint
 	if bool(sun_state.get("enabled", false)):
-		var warmth := float(sun_state.get("heat", 0.0)) * (0.32 if bool(sun_state.get("ignited", false)) else 0.08)
+		var warmth := _visual_heat * lerpf(0.08, 0.32, _visual_ignition)
 		surface_tint = grain_tint.lerp(Color("ffc568"), warmth)
 	_bulk_material.set_shader_parameter("tint", surface_tint)
 	_bulk_material.set_shader_parameter("conversion_progress", float(solver.compaction_progress))
 	_bulk_material.set_shader_parameter("conversion_active", bool(solver.compaction_active))
 	_bulk_material.set_shader_parameter("sun_enabled", bool(sun_state.get("enabled", false)))
-	_bulk_material.set_shader_parameter("stellar_heat", clampf(float(sun_state.get("heat", 0.0)), 0.0, 1.0))
-	_bulk_material.set_shader_parameter("stellar_ignited", bool(sun_state.get("ignited", false)))
+	_bulk_material.set_shader_parameter("stellar_heat", _visual_heat)
+	_bulk_material.set_shader_parameter("stellar_ignition", _visual_ignition)
 	_bulk_material.set_shader_parameter("stellar_spin", float(sun_state.get("spin", 0.0)))
+	_bulk_material.set_shader_parameter("view_zoom", zoom)
 	_bulk_material.set_shader_parameter("simulation_time", simulation_time)
 	_surface_material.set_shader_parameter("simulation_time", simulation_time)
 	_surface_material.set_shader_parameter("visual_epoch", epoch)
@@ -298,7 +318,8 @@ func _build_multimeshes() -> void:
 	_air_instances.multimesh = _air_multimesh
 	_air_instances.material = _air_material
 	_air_instances.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	_air_instances.z_index = 1
+	# Incoming matter starts behind the foreground singularity and world Core.
+	_air_instances.z_index = 0
 	add_child(_air_instances)
 
 	_rim_instances = MultiMeshInstance2D.new()
@@ -352,14 +373,19 @@ func _update_surface_texture(solver) -> void:
 	var core_radius := float(solver.PLAYER_RADIUS) + float(solver.grain_size) * 0.5
 	var lookup: PackedFloat32Array = solver.radial_lookup
 	for column in FIELD_COLUMNS:
-		running_mass += maxf(float(masses[column]), 0.0)
+		var column_mass := maxf(float(masses[column]), 0.0)
+		running_mass += column_mass
 		var cumulative := running_mass / total_mass if total_mass > 0.0 else 0.0
+		# A second CDF walks from column 719 back to zero. Alternating the search
+		# direction prevents a local mass change from remapping every visual sample
+		# clockwise. The two halves now respond in opposite directions.
+		var reverse_cumulative := (total_mass - running_mass + column_mass) / total_mass if total_mass > 0.0 else 0.0
 		var surface_radius := maxf(float(heights[column]), core_radius)
 		var rim_activity_value = solver.get("rim_activity")
 		var rim_activity: PackedFloat32Array = rim_activity_value if rim_activity_value != null else PackedFloat32Array()
 		var landing_time := float(rim_activity[column]) if rim_activity.size() == FIELD_COLUMNS else -1000.0
-		# Row zero is shared by all field passes: B carries the latest landing.
-		_surface_image.set_pixel(column, 0, Color(cumulative, surface_radius, landing_time, 1.0))
+		# Row zero: R forward CDF, G surface, B landing time, A reverse CDF.
+		_surface_image.set_pixel(column, 0, Color(cumulative, surface_radius, landing_time, reverse_cumulative))
 		var offset := column * (RADIAL_LOOKUP_SAMPLES + 1)
 		for sample in RADIAL_LOOKUP_SAMPLES + 1:
 			var radius_squared := float(lookup[offset + sample])

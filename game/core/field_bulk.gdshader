@@ -14,8 +14,9 @@ uniform float animation_inner_radius = 0.0;
 uniform float animation_outer_radius = 0.0;
 uniform bool sun_enabled = false;
 uniform float stellar_heat = 0.0;
-uniform bool stellar_ignited = false;
+uniform float stellar_ignition = 0.0;
 uniform float stellar_spin = 0.0;
+uniform float view_zoom = 1.0;
 uniform float simulation_time = 0.0;
 uniform float conversion_progress = 0.0;
 uniform bool conversion_active = false;
@@ -156,9 +157,15 @@ void fragment() {
 		float texture_value = (cells - 0.5) * 0.32;
 		float hot_filament = 0.0;
 		if (body_layer_index < 0.5) {
-			float folds = sin(domain.x * 2.7 + cells * 6.0 + sin(domain.y * 1.9 + broad * 4.0));
-			hot_filament = pow(1.0 - abs(folds), 5.0) * 0.10;
-			texture_value = (fine - 0.5) * 0.20 + folds * 0.045;
+			// Slow counter-flowing molten bands. Polar motion keeps the centre
+			// alive without implying that the whole star has unlocked rotation.
+			float core_angle = atan(point.y, point.x);
+			float molten_a = sin(core_angle * 7.0 - simulation_time * 0.72 + shell_depth * 12.0 + broad * 4.2);
+			float molten_b = sin(core_angle * -4.0 + simulation_time * 0.43 + shell_depth * 18.0 + fine * 3.0);
+			float folds = molten_a * 0.62 + molten_b * 0.38;
+			float lava_crack = pow(1.0 - abs(sin(core_angle * 9.0 + shell_depth * 15.0 - simulation_time * 0.58 + cells * 3.4)), 7.0);
+			hot_filament = lava_crack * (0.12 + heat * 0.12);
+			texture_value = (fine - 0.5) * 0.17 + folds * 0.105;
 		} else if (body_layer_index < 1.5) {
 			float ribbons = sin(radius * 0.33 + broad * 5.0 + cells * 2.0);
 			hot_filament = pow(0.5 + 0.5 * ribbons, 8.0) * 0.065;
@@ -174,7 +181,7 @@ void fragment() {
 			texture_value = (0.35 - granules.x) * 0.26 + (fine - 0.5) * 0.13;
 		}
 		vec3 cool_color = vec3(0.64, 0.29, 0.065);
-		float ignition_progress = stellar_ignited ? smoothstep(0.80, 1.0, heat) : 0.0;
+		float ignition_progress = smoothstep(0.0, 1.0, stellar_ignition) * smoothstep(0.80, 1.0, heat);
 		vec3 preignition_color = mix(cool_color * (0.74 + body_layer_index * 0.07), vec3(0.92, 0.46, 0.12), smoothstep(0.50, 0.84, heat));
 		vec3 startup_color = vec3(0.90, 0.22, 0.045);
 		vec3 mature_color = startup_color;
@@ -191,12 +198,12 @@ void fragment() {
 			startup_color = vec3(0.94, 0.29, 0.075);
 			mature_color = vec3(1.0, 0.86, 0.48);
 		}
-		vec3 solar_color = mix(preignition_color, mix(startup_color, mature_color, ignition_progress), stellar_ignited ? 1.0 : 0.0);
-		if (stellar_ignited && body_layer_index >= float(body_layer_count - 1)) {
+		vec3 solar_color = mix(preignition_color, mix(startup_color, mature_color, ignition_progress), stellar_ignition);
+		if (stellar_ignition > 0.001 && body_layer_index >= float(body_layer_count - 1)) {
 			float layer_position = (radius - body_layer_inner) / max(body_layer_outer - body_layer_inner, 0.001);
 			float photosphere = smoothstep(0.94, 0.995, layer_position);
 			vec3 rim_color = mix(vec3(0.98, 0.40, 0.04), vec3(1.0, 0.68, 0.20), ignition_progress);
-			solar_color = mix(solar_color, rim_color, photosphere * 0.78);
+			solar_color = mix(solar_color, rim_color, photosphere * 0.78 * stellar_ignition);
 		}
 		solar_color = mix(solar_color, vec3(1.0, 0.73, 0.24), smoothstep(0.72, 1.0, depth) * ignition_progress * 0.35);
 		float texture_strength = 0.45 + heat * 0.20;
@@ -217,6 +224,42 @@ void fragment() {
 		solar_color += vec3(0.11, 0.045, 0.005) * outer_edge;
 		color = mix(color, solar_color * (1.0 + texture_value * texture_strength) * gentle_shimmer, 0.94);
 		color += vec3(1.0, 0.45, 0.08) * hot_filament * (0.4 + heat * 0.6);
+
+		// Animated line-art heat crests leave the stellar core and fade through
+		// the next band. Sparse embers use stable angular cells, not particles.
+		vec4 core_band = texelFetch(body_texture, ivec2(0, 0), 0);
+		float core_outer = core_band.g;
+		float core_width = max(core_band.g - core_band.r, 1.0);
+		float upper_room = max(compacted_radius - core_outer, 0.0);
+		float readable_reach = 18.0 / max(view_zoom, 0.001);
+		float flame_reach = min(max(core_width * 1.25, readable_reach), max(upper_room * 0.55, 5.0));
+		float from_core = radius - core_outer;
+		float polar = atan(point.y, point.x);
+		float wave_a = 0.5 + 0.5 * sin(polar * 11.0 - simulation_time * 1.15 + broad * 4.0);
+		float wave_b = 0.5 + 0.5 * sin(polar * 19.0 + simulation_time * 0.74 + fine * 2.7);
+		float crest_height = flame_reach * (0.18 + 0.60 * wave_a * wave_a + 0.22 * wave_b);
+		float line_width = max(fwidth(radius) * 1.8, 0.65);
+		float flame_outline = 1.0 - smoothstep(line_width, line_width * 2.8, abs(from_core - crest_height));
+		float root_line = 1.0 - smoothstep(line_width, line_width * 2.4, abs(from_core - crest_height * 0.38));
+		float above_core = step(0.0, from_core) * step(from_core, flame_reach);
+		float heat_activity = 0.34 + heat * 0.66;
+		float fire_lines = above_core * (flame_outline + root_line * 0.38) * heat_activity;
+		vec3 fire_color = mix(vec3(0.95, 0.19, 0.025), vec3(1.0, 0.78, 0.25), wave_b);
+		float molten_aura = above_core * (1.0 - smoothstep(0.0, flame_reach * 0.62, from_core));
+		float aura_flow = 0.5 + 0.5 * sin(polar * 8.0 - simulation_time * 0.82 + from_core * 0.31 + broad * 3.6);
+		color = mix(color, vec3(0.76, 0.16, 0.018) + fire_color * aura_flow * 0.22, molten_aura * heat_activity * 0.28);
+		color += fire_color * fire_lines * 0.42;
+
+		float sector_coordinate = (polar + PI) / TAU * 29.0;
+		float sector = floor(sector_coordinate);
+		float sector_seed = hash21(vec2(sector, 31.7));
+		float sector_centre = abs(fract(sector_coordinate) - 0.5);
+		float ember_lift = fract(simulation_time * (0.055 + sector_seed * 0.035) + sector_seed);
+		float ember_radius = core_outer + flame_reach * (0.18 + ember_lift * 0.92);
+		float ember_dot = 1.0 - smoothstep(0.035, 0.105, sector_centre);
+		ember_dot *= 1.0 - smoothstep(line_width, line_width * 3.2, abs(radius - ember_radius));
+		ember_dot *= step(0.74, sector_seed) * above_core * (1.0 - ember_lift) * heat_activity;
+		color += vec3(1.0, 0.61, 0.13) * ember_dot * 0.58;
 		// Only the converting annulus breaks into bright inward-flowing threads.
 		float conversion_depth = (radius - animation_inner_radius) / max(animation_outer_radius - animation_inner_radius, 0.001);
 		float front = exp(-pow((conversion_depth - (1.0 - conversion_progress)) * 14.0, 2.0));

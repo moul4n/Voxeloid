@@ -19,11 +19,11 @@ The active model stores up to 1,000,000,000 grains. Drawing uses a shared budget
 
 This replaces the earlier circle-collision solver. Settled positions sample the material field rather than represent independent collision bodies. Local overlap and arrivals are approximate. Material flows toward neighbouring regions with lower radial height. Hydrogen spreads around the core; rough profiles retain steeper slopes. Arrivals remain scheduled approximations. See `docs/SURFACE.md` for the model and limits. The previous solver remains in `core/voxel_system.gd`, with `legacy_surface_test.gd`, for reference.
 
-The renderer now blends neighbouring angular columns, so the 720-region simulation does not draw hard pie sections. Particles use stable shader variation for size, tint, selective local halo and incoming trails. The rim has several hashed sink, slide, bounce and spark motions. Large arrivals create one bounded impact event and one bonded patch when landing begins. Patch bases curve along the live body and settled grains cover their feathered upper edges. Batch-size-aware landing timing turns large arrivals into slower body-scale responses. The pools hold at most 32 impacts and 64 patches, stay attached to the live surface, and clear with the field. They are visual only and do not change counts, pressure or gameplay queries.
+The renderer now blends neighbouring angular columns, so the 720-region simulation does not draw hard pie sections. Particles use stable shader variation for size, tint, selective local halo and incoming trails. The rim has several hashed sink, slide, bounce and spark motions. Large arrivals create one bounded impact event and one bonded patch when landing begins. Patch bases curve along the live body and settled grains cover their feathered upper edges. Arrivals above 10,000 grains gain a wider footprint, longer landing and temporary global-flow damping, reducing inward puckering. The pools hold at most 32 impacts and 64 patches, stay attached to the live surface, and clear with the field. They are visual only and do not change counts, pressure or gameplay queries.
 
 Element parameters remain in `core/elements.gd`. The current simulation uses one element at a time. Sealing, heat, element fusion, mixed materials, purchase progression, ambient flybys, saves, caves, and overhangs are not implemented.
 
-The player core is separate from the planet or sun's body. Body matter now occupies a core, inner mantle, outer mantle and shallow crust/surface. Outer compaction remains manual. Inner densification transfers 90 percent of the current body core into a denser core, with 10 percent of the consumed portion's area, and preserves residual matter in surrounding layers. Only the converting section shudders and flickers. Layer sizes, mass thresholds, residual splits and labels are profile settings.
+The player core is separate from the planet or sun's body. Body matter now occupies a core, inner mantle, outer mantle and shallow crust/surface. Outer compaction remains manual. Inner densification transfers 90 percent of the current body core into a denser core, with 10 percent of the consumed portion's area, and preserves residual matter in surrounding layers. It also grants a permanent 1.12 multiplier to Core-talent production and a temporary contraction-heat pulse, both shown in the player HUD. Only the converting section shudders and flickers. Layer sizes, mass thresholds, residual splits and labels are profile settings.
 
 The inner automation upgrade has a callable unlock and on/off switch. Normal purchases await progression costs; dev Ctrl-click grants it free. It advances only at new collected-mass milestones and never binds loose outer material. `consume_loose(amount)` is the construction spending hook and cannot consume incoming or bound matter. Player automation settings survive clear and element changes.
 
@@ -31,7 +31,7 @@ Nested-layer validation passed: conservation, 90/10 area split, four separate ri
 
 All four demo elements now support pressure compaction and retain their existing friction and flow settings. Small creep rates prevent helium, carbon, and iron from stalling at flat contacts. Deeper grains pack more tightly under the weight above them, with three adjustable pressure stages and a compression tint. See [Compaction](COMPACTION.md) for the settings and current limits.
 
-Dense loose interiors now merge into a continuous colour fill, visible at 750,000 hydrogen grains. Labelled range rings extend as the camera zooms out. The Compact outer matter button binds existing matter into a permanent solid shell only after an explicit click and readiness checks. Dev Ctrl-click bypasses those checks but still needs material. Clear and element changes reset formed layers too.
+Dense loose interiors now merge into a continuous colour fill, visible at 750,000 hydrogen grains. Labelled range rings extend as the camera zooms out. A ring and its number disappear while the material edge covers that radius and return if the body shrinks inside it. The Compact outer matter button binds existing matter into a permanent solid shell only after an explicit click and readiness checks. Dev Ctrl-click bypasses those checks but still needs material. Clear and element changes reset formed layers too.
 
 Layer formation now contracts the consumed material to 10 percent of its measured pre-conversion area over 1.4 seconds. A damped shudder and gentle brightness flicker accompany the shrinking boundary, and outer grains follow it inward. Counts remain unchanged. Ratio and duration are per-element settings. Rendering also wraps the angular texture index at three o'clock to prevent an out-of-range sample at the circular seam. Rendered seam scans, animation captures, core conservation checks, UI checks, and startup smoke tests passed.
 
@@ -50,13 +50,27 @@ The standalone Python model covers the Sun and five planned planets. Its current
 
 Run `python -B tools/progression_model.py` for the summary or see [Progression model](PROGRESSION_MODEL.md) for assumptions and limits.
 
-The newer planning-only Sun model calculates 45:53:43 for one click per second with no upgrades, 5:25:50 for holding at nine activations per second with no upgrades, and 2:15:40 for the automation-first route. It now models helium discovery, an unlocked 75/25 hydrogen/helium singularity mix, and separate passive helium production for cool, balanced and hot stars. The live scene shares its layer curve but does not yet run its production, talent or helium rules. See [First Sun balance](SUN_BALANCE.md).
+The newer planning-only Sun model calculates 45:53:43 for one click per second with no upgrades, 5:25:50 for holding at nine activations per second with no upgrades, and 2:15:40 for the automation-first route. It models helium discovery, an unlocked 75/25 hydrogen/helium singularity mix, and separate passive helium production for cool, balanced and hot stars. The live scene shares its layer curve and now applies each 1.45 compact reward to live talent output. Helium production and mixed output remain planned. See [First Sun balance](SUN_BALANCE.md).
+
+## Progression and launch presentation
+
+The playable scene now has a data-driven Sun progression layer. Simulation values publish into a typed metric registry. Objectives evaluate those values, grant idempotent unlocks and drive a separate player HUD. The opening seven targets cover releasing matter, holding body mass, feeding and levelling the player Core, ambient capture, first-shell readiness and first compaction. Further gather and compact quests continue through all seven Sun layers, with a First Ignition explanation at 75 SMU. Persistent indicators do not reset when the current target changes.
+
+`start.bat` uses the clean player presentation. It starts with the Core, a small `H` orb, one target bar and dismissible guidance. Decorative background stars, ambient-dust rendering, later controls, technical range rings and the talent tree stay hidden until their presentation unlock. Ambient dust simulation remains active and count-conserving while hidden. The C clear key and all free bypasses remain unavailable in player mode.
+
+Matter called by clicking, holding or automatic talents now begins behind the fixed-screen `H` orb. Each release converts the current orb position through camera pan and zoom into a world angle and radius. Moving or zooming the camera therefore changes the world-side arrival path while the source remains visually attached to the orb. The arrival fan stays closed until particles clear the button.
+
+`start-dev.bat` retains the existing element, amount and free-unlock gestures. F1 opens the progression lab. Metric refresh, completion hold and opening zoom are live controls. HUD scale, unlock impact and passive/event audio levels are labelled hooks until their final renderers and assets exist. The lab can complete the current target, preview guidance and reset progression guidance. See [Progression and presentation](PROGRESSION_PRESENTATION.md), [Audio brief](AUDIO_BRIEF.md), and [Visual unlock brief](VISUAL_UNLOCK_BRIEF.md).
+
+Audio and final unlock art remain placeholders. The Core talent tree now spends the point granted by each Core level. Its highlighted launcher appears first; clicking it opens the tree and guides the required first point into Flow so passive matter starts immediately. The first live row then provides stackable automatic matter, stronger manual calls and faster automatic calls, with ten working ranks in each. Later documented tiers remain dim placeholders. Spending three points reveals the stellar backdrop and introduces the Core's growing pull toward future large bodies. The widened opening ranks are intentionally awaiting a balance pass.
 
 ## Checks
 
 [Ambient dust](AMBIENT_DUST.md) is active in the live scene, with directional drift, gravitational deflection, exact loose-material capture and external supply/capture/gravity hooks. A fixed pool shares the existing rendering limit. The visual pass adds a precomputed space backdrop, layer relief and colour-tinted solar halo/prominences; body spin remains locked off.
 
-The playable scene now enables [Sun progression](SUN_PHASE.md): seven manual mass-gated compactions, separate player assimilation, stellar zone labels, thermal colour/texture progression and compact Sun/player HUD panels. Requirements live in `core/sun_progression.gd`; generic field tests keep the earlier planet settings. Production rewards and helium eligibility are recorded, while talents, fusion chemistry, spin unlocks and the final capstone remain deferred. Player temperature is an independent 300 K placeholder.
+The playable scene now enables [Sun progression](SUN_PHASE.md): seven manual mass-gated compactions, separate player assimilation, stellar zone labels, thermal colour/texture progression and compact Sun/player HUD panels. Requirements live in `core/sun_progression.gd`; generic field tests keep the earlier planet settings. Renderer-owned heat and ignition values approach new targets over roughly 1.6 and 2.2 seconds, so completed layers no longer switch the body directly between red and yellow. Compact rewards now multiply live talent bonuses and appear on the talent UI. First Ignition explains that helium is beginning to form, while actual fusion chemistry, helium output, spin unlocks and the final capstone remain deferred. Player temperature is an independent 300 K placeholder.
+
+The `performance_test.gd` compaction scenario can hold conversion active for measurement. A trial that paused arrivals, ambient capture and surface flow during conversion was rolled back after it failed to improve the high-resolution result. At the 9,116 by 5,697 target produced by this PC's Windows scaling, the existing effect measured 55.1 median FPS and 36.446 ms p95; the pause prototype measured 50.8 FPS and 51.901 ms. The procedural Sun shader, not the 720-column CPU solve, remains the main high-resolution compaction cost.
 
 Sun progression and rendered HUD tests passed on September 20, alongside pressure compaction, generic core/nested layers, arrival, surface and smoke checks. Captures cover the empty scene, seed, ignition and solar target. This validates state and rendering, not scientific heat transport or gameplay pacing.
 
@@ -70,6 +84,10 @@ start.bat --headless --script res://ambient_dust_test.gd
 start.bat --script res://ambient_integration_test.gd
 start.bat --headless --script res://sun_progression_test.gd
 start.bat --script res://sun_ui_test.gd
+start.bat --headless --script res://progression_system_test.gd
+start.bat --headless --script res://presentation_hooks_test.gd
+start.bat --headless --script res://progression_integration_test.gd
+start.bat --script res://progression_ui_test.gd
 start.bat --headless --script res://impact_response_test.gd
 start.bat --headless --script res://compaction_test.gd
 start.bat --headless --script res://core_layer_test.gd
@@ -78,6 +96,7 @@ start.bat --script res://nested_layer_ui_test.gd
 start.bat --script res://layer_ui_test.gd
 start.bat --script res://arrival_rim_test.gd
 start-dev.bat --headless --script res://dev_test.gd
+start-dev.bat --headless --script res://dev_progression_panel_test.gd
 start.bat --script res://performance_test.gd -- --grains=500000 --capture
 start.bat --script res://performance_test.gd -- --grains=100000 --scenario=flow
 start.bat --script res://performance_test.gd -- --grains=500000 --scenario=flight
