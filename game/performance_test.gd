@@ -16,6 +16,7 @@ var _warmup_until := 0
 var _measured_ms := 0.0
 var _manual_physics_samples: Array[float] = []
 var _last_frame_usec := 0
+var _core_variant := 0
 
 func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
@@ -28,6 +29,8 @@ func _initialize() -> void:
 			_scenario = arg.trim_prefix("--scenario=")
 		if arg.begins_with("--grains="):
 			_particle_count = clampi(arg.trim_prefix("--grains=").to_int(), 0, 1000000000)
+		if arg.begins_with("--core-variant="):
+			_core_variant = clampi(arg.trim_prefix("--core-variant=").to_int(), 0, 1)
 	Engine.max_fps = 0
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	call_deferred("_start")
@@ -36,6 +39,7 @@ func _start() -> void:
 	_root = MAIN_SCENE.instantiate()
 	root.add_child(_root)
 	_main = _root
+	_main.grain_renderer.core_motion_variant = _core_variant
 	await process_frame
 	_seed_dense_rings()
 	# Diagnostic switches isolate the bounded ambient work and backdrop draw.
@@ -74,7 +78,17 @@ func _process(_delta: float) -> bool:
 func _seed_dense_rings() -> void:
 	var system = _main.voxels
 	system.clear()
-	if _scenario == "arrival" or _scenario == "flight":
+	if _scenario == "molten":
+		system.seed_uniform(100626)
+		for layer in 4:
+			system.form_core_layer(true)
+			for tick in 100:
+				system.step(1.0 / 60.0)
+		system.sun_progression.ignition_unlocked = true
+		system.spawn_grains(_particle_count, -0.55)
+		for tick in 220:
+			system.step(1.0 / 60.0)
+	elif _scenario == "arrival" or _scenario == "flight":
 		if _scenario == "flight":
 			system.material.gravity_response = 0.01 # Keep all instances airborne for this draw stress test.
 		system.spawn_grains(_particle_count, -PI * 0.25)
@@ -88,6 +102,13 @@ func _seed_dense_rings() -> void:
 		# This is a benchmark override, not a gameplay duration change.
 		system.material["core_layer_duration"] = 100.0
 		system.form_core_layer(true)
+	elif _scenario == "stellar":
+		for layer in 7:
+			system.form_core_layer(true)
+			for tick in 100:
+				system.step(1.0 / 60.0)
+		system.sun_progression.ignition_unlocked = true
+		system.sun_progression.completed_smu = 1000.0
 	# Fit all deposited matter in the view; print zoom with every result.
 	var column_count := float(_particle_count) / float(system.COLUMNS)
 	var fitted_radius: float = sqrt(system.radius_squared_for_mass(column_count, column_count))
@@ -97,13 +118,17 @@ func _seed_dense_rings() -> void:
 		_main.grain_renderer.debug_fill_visual_effects(float(system.time), float(system.grain_size))
 func _finish() -> void:
 	var draws: Dictionary = _main.grain_renderer.get_draw_counts()
-	print("PERF_INSTANCES settled=%d air=%d rim=%d" % [draws.settled, draws.air, int(draws.get("rim", 0))])
+	print("PERF_INSTANCES settled=%d air=%d rim=%d stable_surface=%s" % [draws.settled, draws.air,
+		int(draws.get("rim", 0)), str(bool(draws.get("stable_surface", false)))])
 	print("PERF_EFFECTS impacts=%d patches=%d" % [int(draws.get("impacts", 0)), int(draws.get("patches", 0))])
 	print("PERF_DUST active=%d visible=%d captured=%d" % [_main.ambient_dust.active_count, _main.dust_renderer.drawn_count, _main.dust_deposited])
 	if OS.get_cmdline_user_args().has("--capture"):
 		root.get_texture().get_image().save_png("res://../scratch/checks/field-%s-%d.png" % [_scenario, _particle_count])
-	print("PERF_SCENE scenario=%s zoom=%.3f count=%d deposited=%d incoming=%d" % [_scenario, _main.zoom_level, _main.voxels.count, _main.voxels.settled_count, _main.voxels.count - _main.voxels.settled_count])
+	print("PERF_SCENE scenario=%s core_variant=%d zoom=%.3f count=%d deposited=%d incoming=%d" % [_scenario, _core_variant, _main.zoom_level, _main.voxels.count, _main.voxels.settled_count, _main.voxels.count - _main.voxels.settled_count])
 	print("PERF_VIEW width=%d height=%d" % [root.get_texture().get_width(), root.get_texture().get_height()])
+	print("PERF_SYSTEM engine=%s renderer=%s adapter=%s cpu=%s" % [
+		Engine.get_version_info().string, RenderingServer.get_current_rendering_method(),
+		RenderingServer.get_video_adapter_name(), OS.get_processor_name()])
 	var total_ms := 0.0
 	for frame_ms in _frame_times:
 		total_ms += frame_ms
@@ -111,6 +136,7 @@ func _finish() -> void:
 	_frame_times.sort()
 	var median_frame_ms := _percentile(_frame_times, 0.5)
 	var p95_frame_ms := _percentile(_frame_times, 0.95)
+	var p99_frame_ms := _percentile(_frame_times, 0.99)
 	var median_fps := 1000.0 / maxf(median_frame_ms, 0.001)
 	var physics_median := 0.0
 	var physics_p95 := 0.0
@@ -119,9 +145,9 @@ func _finish() -> void:
 		physics_median = _percentile(_manual_physics_samples, 0.5)
 		physics_p95 = _percentile(_manual_physics_samples, 0.95)
 	if _mode != "manual-step":
-		print("PERF_RESULT mode=%s grains=%d frames=%d median_fps=%.1f p95_frame_ms=%.3f" % [_mode, _particle_count, _frame_times.size(), median_fps, p95_frame_ms])
+		print("PERF_RESULT mode=%s grains=%d frames=%d median_fps=%.1f median_frame_ms=%.3f p95_frame_ms=%.3f p99_frame_ms=%.3f gpu_frame_ms=unavailable" % [_mode, _particle_count, _frame_times.size(), median_fps, median_frame_ms, p95_frame_ms, p99_frame_ms])
 	else:
-		print("PERF_RESULT mode=%s grains=%d frames=%d median_fps=%.1f p95_frame_ms=%.3f median_physics_ms=%.3f p95_physics_ms=%.3f" % [_mode, _particle_count, _frame_times.size(), median_fps, p95_frame_ms, physics_median, physics_p95])
+		print("PERF_RESULT mode=%s grains=%d frames=%d median_fps=%.1f median_frame_ms=%.3f p95_frame_ms=%.3f p99_frame_ms=%.3f median_physics_ms=%.3f p95_physics_ms=%.3f gpu_frame_ms=unavailable" % [_mode, _particle_count, _frame_times.size(), median_fps, median_frame_ms, p95_frame_ms, p99_frame_ms, physics_median, physics_p95])
 	quit(0)
 
 func _percentile(sorted_values: Array[float], fraction: float) -> float:

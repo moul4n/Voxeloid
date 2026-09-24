@@ -46,6 +46,11 @@ const HYDROGEN := {
 	"compaction_response": 1.0,
 	"compaction_creep": 0.08,
 	"compaction_depth_darkening": 0.20,
+	"dense_enter_layers": 40.0,
+	"dense_exit_layers": 35.0,
+	"dense_edge_layers": 3.0,
+	"dense_detail_scale": 1.0,
+	"dense_blend_seconds": 1.2,
 	"cells": [Vector2i.ZERO]
 }
 
@@ -84,6 +89,11 @@ const HELIUM := {
 	"compaction_response": 1.08,
 	"compaction_creep": 0.06,
 	"compaction_depth_darkening": 0.23,
+	"dense_enter_layers": 40.0,
+	"dense_exit_layers": 35.0,
+	"dense_edge_layers": 3.0,
+	"dense_detail_scale": 1.0,
+	"dense_blend_seconds": 1.2,
 	"cells": [Vector2i.ZERO, Vector2i(1, 0)]
 }
 const CARBON := {
@@ -120,6 +130,11 @@ const CARBON := {
 	"compaction_response": 1.15,
 	"compaction_creep": 0.035,
 	"compaction_depth_darkening": 0.27,
+	"dense_enter_layers": 44.0,
+	"dense_exit_layers": 38.0,
+	"dense_edge_layers": 3.5,
+	"dense_detail_scale": 1.0,
+	"dense_blend_seconds": 1.3,
 	"cells": [Vector2i.ZERO, Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)]
 }
 const IRON := {
@@ -156,5 +171,10 @@ const IRON := {
 	"compaction_response": 1.22,
 	"compaction_creep": 0.02,
 	"compaction_depth_darkening": 0.30,
+	"dense_enter_layers": 48.0,
+	"dense_exit_layers": 40.0,
+	"dense_edge_layers": 4.0,
+	"dense_detail_scale": 1.0,
+	"dense_blend_seconds": 1.3,
 	"cells": [Vector2i.ZERO, Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 0), Vector2i(2, 1)]
 }

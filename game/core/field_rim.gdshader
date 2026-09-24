@@ -2,7 +2,6 @@ shader_type canvas_item;
 render_mode unshaded;
 
 const int FIELD_COLUMNS = 720;
-const float RIM_LIFETIME = 1.2;
 
 uniform sampler2D field_texture : filter_nearest, repeat_disable;
 uniform sampler2D rim_slots : filter_nearest, repeat_disable;
@@ -12,6 +11,8 @@ uniform float display_diameter = 2.0;
 uniform vec4 grain_tint : source_color = vec4(0.50, 0.82, 1.0, 1.0);
 uniform int visual_epoch = 0;
 uniform float distance_mode = 0.0;
+uniform float molten_surface_blend = 0.0;
+uniform float molten_reservoir_radius = 42.0;
 
 varying float rim_alpha;
 varying float rim_brightness;
@@ -37,37 +38,31 @@ float surface_at(int column) {
 }
 
 void vertex() {
-	int slot_column = int(floor(texelFetch(rim_slots, ivec2(INSTANCE_ID, 0), 0).r + 0.5));
-	int column = clamp(slot_column, 0, FIELD_COLUMNS - 1);
-	float landing_time = texelFetch(field_texture, ivec2(column, 0), 0).b;
-	float event_age = max(simulation_time - landing_time, 0.0);
-	// A stable per-instance phase keeps a held emission visibly alive even as
-	// the column's latest landing timestamp is refreshed every tick.
-	float age = mod(simulation_time + random01(uint(INSTANCE_ID) * 17u + 7u) * RIM_LIFETIME, RIM_LIFETIME);
-	float life = clamp(age / RIM_LIFETIME, 0.0, 1.0);
-	uint identity = uint(INSTANCE_ID) ^ uint(max(visual_epoch, 0)) * 747796405u;
-	float motion_type = random01(identity ^ 0x85ebca6bu);
-	float here = surface_at(column);
-	float left = surface_at(column - 1);
-	float right = surface_at(column + 1);
+	vec4 contact = texelFetch(rim_slots, ivec2(INSTANCE_ID, 0), 0);
+	vec4 identity_data = texelFetch(rim_slots, ivec2(INSTANCE_ID, 1), 0);
+	float life = clamp((simulation_time - contact.g) / max(contact.b, 0.001), 0.0, 1.0);
+	uint local_id = uint(max(contact.a, 0.0));
+	uint seed = uint(max(identity_data.r, 0.0));
+	uint identity = local_id ^ seed ^ uint(max(visual_epoch, 0)) * 747796405u;
+	float angle = contact.r + (random01(local_id ^ seed) - 0.5) * identity_data.g;
+	int column = int(floor(mod(angle, TAU) * (float(FIELD_COLUMNS) / TAU))) % FIELD_COLUMNS;
+	float here = mix(surface_at(column), molten_reservoir_radius, molten_surface_blend);
+	float left = mix(surface_at(column - 1), molten_reservoir_radius, molten_surface_blend);
+	float right = mix(surface_at(column + 1), molten_reservoir_radius, molten_surface_blend);
 	float downhill = (right < left) ? 1.0 : -1.0;
 	float slope = abs(right - left);
-	float slide = min(grain_diameter * (0.16 + life * 0.72) * (1.0 + slope * 0.12), grain_diameter * 1.15);
-	float fan = (random01(uint(INSTANCE_ID) * 31u + 19u) - 0.5) * grain_diameter * 0.32;
-	float column_jitter = 0.10 + random01(uint(INSTANCE_ID) * 43u + 23u) * 0.80;
-	float angle = (float(column) + column_jitter) * (TAU / float(FIELD_COLUMNS));
-	angle += downhill * slide / max(here, 1.0) + fan / max(here, 1.0);
-	float bounce = motion_type > 0.72 && motion_type < 0.88 ? sin(life * PI) * grain_diameter * 0.55 : 0.0;
-	float sink_rate = motion_type < 0.42 ? 0.62 : 0.42;
-	float rim_offset = mix(grain_diameter * 1.45 + bounce, -grain_diameter * sink_rate, life);
-	vec2 grain_position = vec2(cos(angle), sin(angle)) * (here + rim_offset);
-	float event_freshness = 1.0 - smoothstep(RIM_LIFETIME * 0.55, RIM_LIFETIME, event_age);
-	rim_alpha = smoothstep(0.0, 0.08, life) * (1.0 - smoothstep(0.64, 1.0, life)) * event_freshness;
-	if (slot_column < 0 || slot_column >= FIELD_COLUMNS || event_age >= RIM_LIFETIME) { rim_alpha = 0.0; }
-	rim_brightness = mix(0.96, 1.20, random01(identity ^ 0x63d83595u));
-	rim_stretch = motion_type > 0.88 ? mix(1.2, 2.0, distance_mode) * sin(life * PI) : 1.0;
+	float motion_type = random01(identity ^ 0x85ebca6bu);
+	float slide = min(grain_diameter * life * (0.35 + slope * 0.16), grain_diameter * 1.35);
+	angle += downhill * slide / max(here, 1.0);
+	float bounce = motion_type > 0.55 ? sin(life * PI) * grain_diameter * mix(0.18, 0.72, motion_type) : 0.0;
+	float settle = mix(grain_diameter * 0.35 + bounce, -grain_diameter * 0.34, life);
 	vec2 radial = vec2(cos(angle), sin(angle));
 	vec2 tangent = vec2(-radial.y, radial.x);
+	vec2 grain_position = radial * (here + settle);
+	rim_alpha = 1.0 - smoothstep(0.72, 1.0, life);
+	if (identity_data.a <= 0.0 || simulation_time < contact.g) { rim_alpha = 0.0; }
+	rim_brightness = mix(0.94, 1.18, random01(identity ^ 0x63d83595u));
+	rim_stretch = motion_type > 0.88 ? 1.0 + mix(0.05, 0.45, distance_mode) * sin(life * PI) : 1.0;
 	VERTEX = grain_position + tangent * VERTEX.x * display_diameter + radial * VERTEX.y * display_diameter * rim_stretch;
 }
 
@@ -76,6 +71,6 @@ void fragment() {
 	float radial_distance = length(centered_uv);
 	float antialias_width = max(fwidth(radial_distance), 0.001);
 	float coverage = 1.0 - smoothstep(1.0 - antialias_width, 1.0 + antialias_width, radial_distance);
-	vec3 hot_tint = mix(grain_tint.rgb, vec3(1.0, 0.82, 0.52), 0.14);
+	vec3 hot_tint = mix(grain_tint.rgb, vec3(1.0, 0.82, 0.52), 0.10);
 	COLOR = vec4(hot_tint * rim_brightness, grain_tint.a * coverage * rim_alpha);
 }

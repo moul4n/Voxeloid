@@ -12,6 +12,8 @@ Manual outer conversion retains 10% of the consumed cross-sectional area. This i
 
 Ignition becomes eligible at **75 SMU** after the active conversion has finished. The body-temperature baseline rises from 0.2 MK to 4 MK there, then follows the design's smoothed curve to 15 MK. Seven finished layers, ignition and 1,000 SMU expose solar stabilisation readiness. No final capstone or System Seeding transition is automated.
 
+Ignition also changes how uncommitted loose matter is drawn. The renderer crossfades deposited dots into a liquid reservoir and changes later graft effects into hot splashes. This is a visual progression rule, not a thermal phase simulation. Counts stay loose and spendable until the player forms a layer or feeds the Player Core. Planets and pre-ignition bodies retain the granular renderer.
+
 ## Visible interior
 
 Outer compactions now reveal the zones themselves: first the stellar core, then radiative interior, convective envelope and shallow photosphere. There is no need to press inner densification merely to see more than one band. Later outer conversions enlarge the envelope and put 2% of newly consumed mass/area into the photosphere. These allocations are readable game construction rules, not measured solar density fractions.

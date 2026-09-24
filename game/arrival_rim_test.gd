@@ -21,7 +21,7 @@ func run() -> void:
 			var draws: Dictionary = main.grain_renderer.get_draw_counts()
 			var rim := int(draws.get("rim", 0))
 			check(int(draws.settled) + int(draws.air) + rim <= 500000, "arrival exceeded shared draw budget")
-			check(rim <= 2048, "rim grew beyond its fixed pool")
+			check(rim <= 256, "contact particles grew beyond their fixed pool")
 			check(absf(main.voxels.total_mass() - 1250000.0) < 0.01, "landing lost material")
 			if tick == 35:
 				check(main.voxels.settled_count == 750000 and rim == 0, "rim appeared before impact")

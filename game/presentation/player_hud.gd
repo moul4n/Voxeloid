@@ -93,9 +93,13 @@ static func _draw_indicators(canvas: CanvasItem, font: Font, sun: Dictionary, vi
 	canvas.draw_rect(rect, PANEL_EDGE, false, 1.0)
 	var y := 21.0
 	if visible.has(&"indicator.body_mass"):
-		_text(canvas, font, rect.position + Vector2(14, y), "MASS", 10, MUTED, 70)
-		_text(canvas, font, rect.position + Vector2(168, y), "%d" % int(snapshot.get("body_mass", 0.0)), 11, TEXT, 68)
-		_bar(canvas, rect.position + Vector2(14, y + 10), Vector2(222, 6), float(snapshot.get("body_mass_display", 0.0)), MASS)
+		var molten := bool(sun.get("ignited", false))
+		var mass_label := "LIQUID RESERVE" if molten else "MASS"
+		var mass_value := int(snapshot.get("loose_reserve", 0)) if molten else int(snapshot.get("body_mass", 0.0))
+		var mass_display := float(snapshot.get("loose_reserve_display", 0.0)) if molten else float(snapshot.get("body_mass_display", 0.0))
+		_text(canvas, font, rect.position + Vector2(14, y), mass_label, 10, MASS if molten else MUTED, 120)
+		_text(canvas, font, rect.position + Vector2(168, y), "%d" % mass_value, 11, TEXT, 68)
+		_bar(canvas, rect.position + Vector2(14, y + 10), Vector2(222, 6), mass_display, MASS)
 		y += 38.0
 	if visible.has(&"indicator.heat"):
 		_text(canvas, font, rect.position + Vector2(14, y), "HEAT", 10, MUTED, 70)

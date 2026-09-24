@@ -45,6 +45,8 @@ const DEPOSIT_ARC := 0.24
 const MAX_BATCHES := 1024
 const FIXED_STEP := 1.0 / 60.0
 const RADIAL_LOOKUP_SAMPLES := 16
+const MAX_LANDING_EVENTS := 64
+const LANDING_EVENT_LIFETIME := 1.2
 
 var material: Dictionary
 var grain_size: float
@@ -82,6 +84,7 @@ var heights := PackedFloat32Array()
 # for every column.  This is a fixed 12,240-float cache, independent of count.
 var radial_lookup := PackedFloat32Array()
 var batches: Array[Dictionary] = []
+var landing_events: Array[Dictionary] = []
 var revision := 0
 var epoch := 0
 var seed_counter := 0
@@ -100,6 +103,8 @@ var _compaction_stage_pressures := Vector3(1800.0, 9500.0, 45000.0)
 var _compaction_stage_packings := Vector3(0.79, 0.87, 0.94)
 var _accumulator := 0.0
 var _edge_conductance := PackedFloat64Array()
+var _edge_flux := PackedFloat64Array()
+var _outgoing_flux := PackedFloat64Array()
 var _lower := PackedFloat64Array()
 var _diagonal := PackedFloat64Array()
 var _upper := PackedFloat64Array()
@@ -142,6 +147,8 @@ func _init(profile: Dictionary = ElementsData.HYDROGEN, particle_capacity: int =
 	heights.resize(COLUMNS)
 	radial_lookup.resize(COLUMNS * (RADIAL_LOOKUP_SAMPLES + 1))
 	_edge_conductance.resize(COLUMNS)
+	_edge_flux.resize(COLUMNS)
+	_outgoing_flux.resize(COLUMNS)
 	_lower.resize(COLUMNS)
 	_diagonal.resize(COLUMNS)
 	_upper.resize(COLUMNS)
@@ -199,6 +206,8 @@ func spawn_grains(amount: int = 1, source_angle: float = NAN, source_radius: flo
 		"seed": seed_counter,
 		"spread": _deposit_arc(),
 	}
+	batch.landing_span = _landing_span_for(accepted, duration)
+	_record_landing_event(batch, time + duration - float(batch.landing_span), accepted, float(batch.landing_span))
 	seed_counter += 1
 	count += accepted
 	_total_collected_mass += float(accepted) * maxf(float(material.get("mass", 1.0)), 0.0)
@@ -217,6 +226,8 @@ func step(delta: float) -> void:
 
 func _simulate(delta: float) -> void:
 	time += delta
+	while not landing_events.is_empty() and time - float(landing_events[0].birth) > float(landing_events[0].duration):
+		landing_events.pop_front()
 	if sun_progression != null:
 		sun_progression.step(delta)
 	var changed := _advance_core_compaction(delta)
@@ -254,6 +265,7 @@ func clear() -> void:
 	time = 0.0
 	_accumulator = 0.0
 	batches.clear()
+	landing_events.clear()
 	seed_counter = 0
 	epoch += 1
 	_reset_surface()
@@ -296,6 +308,7 @@ func seed_uniform(amount: int) -> void:
 	_cancel_core_compaction()
 	_set_loose_base_radius()
 	batches.clear()
+	landing_events.clear()
 	for column in COLUMNS:
 		masses[column] = float(accepted) / float(COLUMNS)
 		_edge_conductance[column] = 0.0
@@ -777,6 +790,7 @@ func _append_batch(batch: Dictionary) -> void:
 		if previous.birth == batch.birth and is_equal_approx(previous.angle, batch.angle) and is_equal_approx(float(previous.start_radius), float(batch.start_radius)):
 			previous.amount = int(previous.amount) + int(batch.amount)
 			previous.arrival_total = int(previous.get("arrival_total", previous.amount - batch.amount)) + int(batch.amount)
+			previous.landing_span = _landing_span_for(int(previous.arrival_total), float(previous.duration))
 			batches[batches.size() - 1] = previous
 			return
 	if batches.size() < MAX_BATCHES:
@@ -795,6 +809,7 @@ func _append_batch(batch: Dictionary) -> void:
 	tail.angle = atan2(y, x)
 	tail.end_radius = (float(tail.end_radius) * old_amount + float(batch.end_radius) * new_amount) / combined
 	tail.start_radius = maxf(float(tail.start_radius), float(batch.start_radius))
+	tail.landing_span = _landing_span_for(int(tail.arrival_total), float(tail.duration))
 	batches[batches.size() - 1] = tail
 
 
@@ -809,8 +824,7 @@ func _land_due_batches() -> bool:
 		# over a longer interval so a thin shell develops one broad, damped body
 		# response instead of a sequence of sharp whole-ring corrections.
 		var impact_scale := _large_impact_scale(total)
-		var settle_seconds := maxf(float(material.get("impact_settle_seconds", 0.55)), 0.01)
-		var landing_span := minf(settle_seconds * lerpf(1.0, 2.2, impact_scale), float(batch.duration) * 0.68)
+		var landing_span := float(batch.get("landing_span", _landing_span_for(total, float(batch.duration))))
 		if time + 0.0000001 < end_time - landing_span:
 			break
 		var progress := clampf((time - end_time + landing_span + 0.0000001) / landing_span, 0.0, 1.0)
@@ -834,6 +848,22 @@ func _land_due_batches() -> bool:
 
 func _deposit_arc() -> float:
 	return DEPOSIT_ARC * clampf(float(material.get("impact_spread", 1.0)), 0.1, 2.0)
+
+func _landing_span_for(total: int, duration: float) -> float:
+	var settle_seconds := maxf(float(material.get("impact_settle_seconds", 0.55)), 0.01)
+	return minf(settle_seconds * lerpf(1.0, 2.2, _large_impact_scale(total)), duration * 0.68)
+
+func _record_landing_event(batch: Dictionary, birth: float, total: int, landing_span: float) -> void:
+	if landing_events.size() >= MAX_LANDING_EVENTS:
+		landing_events.pop_front()
+	landing_events.append({
+		"angle": float(batch.angle),
+		"birth": birth,
+		"duration": landing_span + LANDING_EVENT_LIFETIME * 0.6,
+		"amount": total,
+		"seed": int(batch.seed),
+		"spread": float(batch.spread),
+	})
 
 func _deposit(amount: int, angle: float, impact_total: int = 0) -> void:
 	last_landing_time = time
@@ -894,33 +924,65 @@ func _redistribute(delta: float) -> bool:
 		var slope_factor := 1.0 if repose <= 0.0 else creep
 		if repose > 0.0 and absf(difference) > 0.000001:
 			slope_factor = maxf(slope_factor, 1.0 - repose * run / absf(difference))
-		_edge_conductance[column] = angular_diffusion * delta * slope_factor / (step_angle * step_angle)
+		# Each fixed step may cross one neighbouring edge. Cap its relaxation so
+		# an impact spreads outward from its contact instead of being solved around
+		# the complete periodic ring in one tick.
+		var base_relaxation := minf(angular_diffusion * delta / (step_angle * step_angle), 0.49)
+		_edge_conductance[column] = base_relaxation * slope_factor
 		has_open_edge = has_open_edge or _edge_conductance[column] > 0.000000001
 	if not has_open_edge:
 		return false
-
-	# Solve (I - div(k grad)) m_next = m_now on the periodic ring.  The matrix
-	# is a symmetric M-matrix: its inverse keeps non-negative mass non-negative,
-	# while matching edge coefficients conserve mass exactly up to float error.
-	for column in COLUMNS:
-		var left := (column + COLUMNS - 1) % COLUMNS
-		_lower[column] = -_edge_conductance[left]
-		_upper[column] = -_edge_conductance[column]
-		_diagonal[column] = 1.0 + _edge_conductance[left] + _edge_conductance[column]
-	_solve_cyclic()
 	var previous_total := 0.0
-	var solved_total := 0.0
-	var largest_column := 0
-	var moved := false
 	for column in COLUMNS:
 		previous_total += masses[column]
-		moved = moved or absf(_solution[column] - masses[column]) > maxf(0.000000001, masses[column] * 0.000000001)
-		masses[column] = maxf(_solution[column], 0.0)
+	var moved := false
+	# Zero-repose material uses four bounded spatial scales. Each pass remains
+	# local, but fluid pressure can travel around a large body without hundreds
+	# of tiny angular hops. The widest pass spans sixteen degrees, never the whole
+	# body. Rough material crosses adjacent edges only and can retain a pile.
+	var strides := [1, 4, 16, 32] if repose <= 0.0 else [1]
+	for stride in strides:
+		_edge_flux.fill(0.0)
+		_outgoing_flux.fill(0.0)
+		var stride_scale := 1.0 / sqrt(float(stride))
+		for column in COLUMNS:
+			var next := (column + int(stride)) % COLUMNS
+			var difference := masses[column] - masses[next]
+			var conductance := minf(_edge_conductance[column], _edge_conductance[next]) * stride_scale
+			var flux := difference * 0.5 * conductance
+			_edge_flux[column] = flux
+			if flux > 0.0:
+				_outgoing_flux[column] += flux
+			else:
+				_outgoing_flux[next] -= flux
+		# Two edges can request the same source. Leave at least half of each
+		# column in place during a pass so all intermediate states stay valid.
+		for column in COLUMNS:
+			if _outgoing_flux[column] <= masses[column] * 0.5 or _outgoing_flux[column] <= 0.0:
+				continue
+			var flux_scale := masses[column] * 0.5 / _outgoing_flux[column]
+			var right_edge := column
+			var left_edge := (column + COLUMNS - int(stride)) % COLUMNS
+			if _edge_flux[right_edge] > 0.0:
+				_edge_flux[right_edge] *= flux_scale
+			if _edge_flux[left_edge] < 0.0:
+				_edge_flux[left_edge] *= flux_scale
+		for column in COLUMNS:
+			var left_edge := (column + COLUMNS - int(stride)) % COLUMNS
+			var next_mass := masses[column] + _edge_flux[left_edge] - _edge_flux[column]
+			moved = moved or absf(next_mass - masses[column]) > maxf(0.000000001, masses[column] * 0.000000001)
+			_solution[column] = maxf(next_mass, 0.0)
+		for column in COLUMNS:
+			masses[column] = _solution[column]
+	var solved_total := 0.0
+	var largest_column := 0
+	for column in COLUMNS:
 		solved_total += masses[column]
 		if masses[column] > masses[largest_column]:
 			largest_column = column
-	# Correct only round-off on the largest bin, preserving the fixed total.
+	# Correct only floating-point roundoff on the largest bin.
 	masses[largest_column] += previous_total - solved_total
+	last_solver_relative_error = absf(previous_total - solved_total) / maxf(previous_total, 1.0)
 	return moved
 
 
@@ -1066,6 +1128,8 @@ func _reset_surface() -> void:
 		for sample in RADIAL_LOOKUP_SAMPLES + 1:
 			radial_lookup[offset + sample] = _base_radius * _base_radius
 		_edge_conductance[column] = 0.0
+		_edge_flux[column] = 0.0
+		_outgoing_flux[column] = 0.0
 	max_height = _base_radius
 
 

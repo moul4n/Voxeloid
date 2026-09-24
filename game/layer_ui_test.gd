@@ -34,8 +34,20 @@ func run() -> void:
 		for zoom in [1.0, 0.002]:
 			main.grain_renderer.update_field(main.voxels, Vector2.ZERO, zoom)
 			var diameter: float = main.grain_renderer._surface_material.get_shader_parameter("display_diameter")
-			var expected: float = main.voxels.grain_size * sqrt(float(population) / mini(population, main.grain_renderer.capacity))
-			check(is_equal_approx(diameter, expected), "sample coverage shrinks with population or zoom")
+			var presentation: Dictionary = main.grain_renderer.get_draw_counts()
+			var representation_scale := sqrt(float(presentation.settled_logical) / float(maxi(int(presentation.settled), 1)))
+			var maximum_diameter: float = 3.0 * representation_scale / zoom if bool(presentation.pressure_grain_mode) else 3.0 / zoom
+			check(diameter >= main.voxels.grain_size and diameter <= maximum_diameter + 0.001,
+				"dense edge detail has an invalid projected grain size")
+			check(int(presentation.settled) <= int(presentation.settled_logical),
+				"dense presentation drew more samples than logical matter")
+			if float(presentation.dense_fill_blend) > 0.99:
+				if bool(presentation.pressure_grain_mode):
+					check(int(presentation.settled) == mini(int(presentation.settled_logical), int(presentation.capacity)),
+						"compressed-grain presentation did not use its available shared budget")
+				else:
+					check(int(presentation.settled) <= int(presentation.settled_detail_budget) + 1,
+						"legacy dense presentation exceeded its exposed-edge budget")
 	main.voxels.seed_uniform(750000)
 	check(main.voxels.layer_status().ready, "750k compacted hydrogen should offer a layer")
 	check(main.voxels.compacted_count == 0, "layer formed automatically")

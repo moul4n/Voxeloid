@@ -155,8 +155,8 @@ func _initialize() -> void:
 		split.step(1.0 / 60.0)
 	if not check(absf(whole.total_mass() - split.total_mass()) <= 0.01 and absf(whole.sample_height(0.7) - split.sample_height(0.7)) <= 0.01, "fixed stepping changed surface"):
 		return
-	# A one-sided 500k arrival must level around the whole core in seconds, not
-	# retain a permanent radial spike.  These are CPU correctness timings only.
+	# A one-sided 500k arrival must spread progressively across local edges.
+	# It should not solve the opposite side of the ring in the impact tick.
 	var burst: MaterialFieldScript = MaterialFieldScript.new(ElementsData.HYDROGEN)
 	burst.spawn_grains(500000, 0.0)
 	advance(burst, 2.2)
@@ -169,8 +169,8 @@ func _initialize() -> void:
 	advance(burst, 10.0)
 	var elapsed_ms := float(Time.get_ticks_usec() - began) / 1000.0
 	var range_22 := height_range(burst)
-	var mean_22 := (range_22.x + range_22.y) * 0.5
-	if not check(height_variance(burst) < burst_variance * 0.01 and (range_22.y - range_22.x) / mean_22 < 0.05, "one-sided hydrogen burst retained an ellipse after 22 seconds"): return
+	if not check(height_variance(burst) < burst_variance and range_12.x > range_6.x and range_22.x > range_12.x and range_22.y < range_12.y,
+		"one-sided hydrogen burst did not spread progressively across local edges"): return
 	for column in burst.COLUMNS:
 		if not check(burst.masses[column] >= 0.0 and is_finite(burst.heights[column]), "500k stress produced negative mass or invalid height"): return
 	if not check(absf(mass_sum(burst) - 500000.0) <= 0.01 and burst.last_solver_relative_error < 0.0000000001, "500k extended flow lost mass"): return
@@ -189,8 +189,7 @@ func _initialize() -> void:
 		ongoing.spawn_grains(500000, 0.0)
 		advance(ongoing, 1.0)
 	var ongoing_range := height_range(ongoing)
-	var ongoing_mean := (ongoing_range.x + ongoing_range.y) * 0.5
-	if not check(ongoing.masses[int(ongoing.COLUMNS / 2)] > 0.0 and ongoing_range.x > MaterialFieldScript.PLAYER_RADIUS and (ongoing_range.y - ongoing_range.x) / ongoing_mean < 0.4 and absf(mass_sum(ongoing) - float(ongoing.settled_count)) < 0.01 and is_finite(ongoing_range.y), "ongoing one-sided feed did not spread around the core"): return
+	if not check(ongoing.masses[int(ongoing.COLUMNS / 4)] > 0.0 and ongoing.masses[int(ongoing.COLUMNS / 2)] > 0.0 and ongoing_range.x > MaterialFieldScript.PLAYER_RADIUS and absf(mass_sum(ongoing) - float(ongoing.settled_count)) < 0.01 and is_finite(ongoing_range.y), "ongoing one-sided feed did not spread progressively around the core"): return
 	var narrow_profile := ElementsData.HYDROGEN.duplicate()
 	narrow_profile.flow_rate = 0.0
 	narrow_profile.impact_spread = 0.1

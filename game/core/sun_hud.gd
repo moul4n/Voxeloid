@@ -32,7 +32,8 @@ static func draw(canvas: CanvasItem, font: Font, state: Dictionary) -> void:
 	bar(canvas, body + Vector2(14, 90), float(state.heat), Color("ea855f"))
 	text(canvas, font, player + Vector2(14, 19), "PLAYER CORE  /  LEVEL %d" % int(state.player_level), 11, Color("8cdad6"))
 	text(canvas, font, player + Vector2(14, 36), "MASS   %.0f absorbed" % float(state.player_mass))
-	text(canvas, font, player + Vector2(14, 54), "LEVEL CAP REACHED" if int(state.player_level) >= 15 else "NEXT LEVEL   %.0f loose mass" % float(state.player_cost))
+	var reserve_name := "liquid reserve" if bool(state.get("ignited", false)) else "loose mass"
+	text(canvas, font, player + Vector2(14, 54), "LEVEL CAP REACHED" if int(state.player_level) >= 15 else "NEXT LEVEL   %.0f %s" % [float(state.player_cost), reserve_name])
 	bar(canvas, player + Vector2(14, 61), float(state.player_level) / 15.0, Color("71c9c3"))
 	text(canvas, font, player + Vector2(14, 83), "CORE   " + kelvin(float(state.player_temperature)) + "  /  shielded")
 	bar(canvas, player + Vector2(14, 90), float(state.player_temperature) / 2000.0, Color("81aacb"))

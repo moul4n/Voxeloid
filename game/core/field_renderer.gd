@@ -6,7 +6,11 @@ const MAX_BATCHES := 1024
 const RENDER_INSTANCE_BUDGET := 500000
 const MAX_DISPLAY_SCREEN_DIAMETER := 3.0
 const IDENTITY_FLOATS_PER_INSTANCE := 8
+const CUSTOM_FLOATS_PER_INSTANCE := 4
 const RADIAL_LOOKUP_SAMPLES := 16
+const STABLE_SURFACE_SAMPLE_LIMIT := 50000
+const STABLE_TO_DENSE_BEGIN := 30000
+const PINNED_SURFACE_SAMPLE_LIMIT := 256
 
 const SurfaceShader := preload("res://core/field_surface.gdshader")
 const AirShader := preload("res://core/field_air.gdshader")
@@ -64,8 +68,24 @@ var _visual_heat := 0.0
 var _visual_ignition := 0.0
 var _last_visual_state_time := -1.0
 var _visual_state_initialized := false
+var _stable_sample_columns := PackedInt32Array()
+var _stable_sample_angle_fractions := PackedFloat32Array()
+var _stable_sample_radial_fractions := PackedFloat32Array()
+var _stable_surface_mode := false
+var _dense_fill_enabled := false
+var _dense_fill_blend := 0.0
+var _molten_reservoir_radius := 42.0
+var _formed_outer_radius := 42.0
+var _last_dense_transition_time := -1.0
+var _settled_detail_budget_last := 0
+var core_motion_variant := 1
+var core_motion_speed := 1.0
+# Candidate replacement for the old continuous loose-matter disc. Logical
+# density is represented by pressure-shaped samples up to the shared cap.
+# Ignited stellar liquid and committed body layers remain bulk-rendered.
+var pressure_grain_mode := true
 
-const MAX_RIM_INSTANCES := 2048
+const MAX_RIM_INSTANCES := 256
 const RIM_LIFETIME := 1.2
 const MAX_IMPACT_EVENTS := 32
 const MAX_BONDED_PATCHES := 64
@@ -82,6 +102,7 @@ func _init(instance_capacity: int = RENDER_INSTANCE_BUDGET) -> void:
 	_build_multimeshes()
 
 func update_field(solver, center: Vector2, zoom: float) -> void:
+	var field_changed := false
 	var solver_id: int = solver.get_instance_id()
 	if solver_id != _last_solver_id:
 		_last_solver_id = solver_id
@@ -91,12 +112,15 @@ func update_field(solver, center: Vector2, zoom: float) -> void:
 		_logical_rim_count = 0
 		_visual_state_initialized = false
 		_last_visual_state_time = -1.0
+		_last_dense_transition_time = -1.0
+		_reset_stable_surface_samples()
 		_clear_visual_effects()
 	var epoch := int(solver.epoch)
 	var revision := int(solver.revision)
 	if epoch != _last_epoch and _last_epoch >= 0:
 		_clear_visual_effects()
 	if revision != _last_revision or epoch != _last_epoch:
+		field_changed = true
 		_update_surface_texture(solver)
 		_update_air_batches(solver)
 		_update_body_layers(solver)
@@ -110,33 +134,6 @@ func update_field(solver, center: Vector2, zoom: float) -> void:
 	var material_data: Dictionary = solver.material
 	var grain_tint: Color = material_data.get("color", Color("80c0ff"))
 	var simulation_time := float(solver.time)
-	var distance_mode := 1.0 - smoothstep(0.08, 0.75, zoom)
-	_air_material.set_shader_parameter("impact_settle_seconds", float(material_data.get("impact_settle_seconds", 0.55)))
-	var core_radius := float(solver.PLAYER_RADIUS)
-	_logical_settled_count = maxi(int(solver.settled_count) - int(solver.compacted_count), 0)
-	_logical_air_count = maxi(int(solver.count) - int(solver.settled_count), 0)
-	_logical_rim_count = _update_rim_slots(solver, simulation_time)
-	var draw_counts := _allocate_draw_counts(_logical_settled_count, _logical_air_count, _logical_rim_count)
-	drawn_settled_count = int(draw_counts.settled)
-	drawn_air_count = int(draw_counts.air)
-	drawn_rim_count = int(draw_counts.rim)
-	_surface_multimesh.visible_instance_count = drawn_settled_count
-	_air_multimesh.visible_instance_count = drawn_air_count
-	_rim_multimesh.visible_instance_count = drawn_rim_count
-	var settled_density_scale := sqrt(float(_logical_settled_count) / float(maxi(drawn_settled_count, 1)))
-	var display_cap_world := MAX_DISPLAY_SCREEN_DIAMETER / maxf(zoom, 0.001)
-	# Each sample covers its share of the full population at every zoom.
-	var settled_display_diameter := grain_diameter * settled_density_scale
-	var bulk_radius := maxf(float(solver.max_height), float(solver.compacted_radius))
-	_bulk.scale = Vector2.ONE * bulk_radius * 2.0
-	_bulk_material.set_shader_parameter("outer_radius", bulk_radius)
-	_bulk_material.set_shader_parameter("compacted_radius", float(solver.compacted_radius))
-	_bulk_material.set_shader_parameter("animation_inner_radius", float(solver.animation_inner_radius))
-	_bulk_material.set_shader_parameter("animation_outer_radius", float(solver.animation_outer_radius))
-	_bulk_material.set_shader_parameter("tint", grain_tint)
-	_bulk_material.set_shader_parameter("loose_packing", float(material_data.get("compaction_loose_packing", 0.72)))
-	_bulk_material.set_shader_parameter("max_packing", _maximum_stage_packing(material_data))
-	_bulk_material.set_shader_parameter("darkening", float(material_data.get("compaction_depth_darkening", 0.2)))
 	var sun_state: Dictionary = solver.call("get_sun_visual_state") if solver.has_method("get_sun_visual_state") else {}
 	var target_heat := clampf(float(sun_state.get("heat", 0.0)), 0.0, 1.0)
 	var target_ignition := 1.0 if bool(sun_state.get("ignited", false)) else 0.0
@@ -151,6 +148,81 @@ func update_field(solver, center: Vector2, zoom: float) -> void:
 		_visual_heat = lerpf(_visual_heat, target_heat, heat_blend)
 		_visual_ignition = lerpf(_visual_ignition, target_ignition, ignition_blend)
 	_last_visual_state_time = simulation_time
+	var distance_mode := 1.0 - smoothstep(0.08, 0.75, zoom)
+	_air_material.set_shader_parameter("impact_settle_seconds", float(material_data.get("impact_settle_seconds", 0.55)))
+	var core_radius := float(solver.PLAYER_RADIUS)
+	_logical_settled_count = maxi(int(solver.settled_count) - int(solver.compacted_count), 0)
+	_logical_air_count = maxi(int(solver.count) - int(solver.settled_count), 0)
+	_logical_rim_count = _update_rim_slots(solver, simulation_time)
+	var loose_packing := maxf(float(material_data.get("compaction_loose_packing", 0.72)), 0.05)
+	var equivalent_outer := sqrt(core_radius * core_radius + float(_logical_settled_count) * float(solver._particle_area) / (PI * loose_packing))
+	var molten_reservoir_radius := sqrt(float(solver.compacted_radius) * float(solver.compacted_radius) +
+		float(_logical_settled_count) * float(solver._particle_area) / (PI * loose_packing))
+	_molten_reservoir_radius = molten_reservoir_radius
+	_formed_outer_radius = float(solver.compacted_radius)
+	var average_layers := maxf(equivalent_outer - core_radius, 0.0) / maxf(grain_diameter, 0.001)
+	var enter_layers := float(material_data.get("dense_enter_layers", 40.0))
+	var exit_layers := minf(float(material_data.get("dense_exit_layers", 35.0)), enter_layers)
+	var projected_grain := grain_diameter * zoom
+	if _dense_fill_enabled:
+		_dense_fill_enabled = average_layers > exit_layers
+	else:
+		_dense_fill_enabled = average_layers >= enter_layers or (average_layers > exit_layers and projected_grain < 0.52)
+	var dense_target := 1.0 if _dense_fill_enabled else 0.0
+	var blend_seconds := maxf(float(material_data.get("dense_blend_seconds", 1.2)), 0.01)
+	if _last_dense_transition_time < 0.0 or simulation_time < _last_dense_transition_time:
+		_dense_fill_blend = dense_target
+	else:
+		var transition_delta := clampf(simulation_time - _last_dense_transition_time, 0.0, 0.1)
+		_dense_fill_blend = move_toward(_dense_fill_blend, dense_target, transition_delta / blend_seconds)
+	_last_dense_transition_time = simulation_time
+	var settled_detail_budget := _settled_detail_budget(solver, zoom, material_data)
+	var requested_settled := _logical_settled_count if pressure_grain_mode else int(round(lerpf(
+		float(_logical_settled_count), float(mini(_logical_settled_count, settled_detail_budget)), _dense_fill_blend)))
+	# Retain the granular renderer for planets and pre-ignition bodies. Once the
+	# visual molten crossfade is effectively complete, retire its invisible
+	# instances instead of spending the draw budget on a hidden dot crust.
+	if _visual_ignition >= 0.995:
+		requested_settled = 0
+	var draw_counts := _allocate_draw_counts(requested_settled, _logical_air_count, _logical_rim_count)
+	drawn_settled_count = int(draw_counts.settled)
+	drawn_air_count = int(draw_counts.air)
+	drawn_rim_count = int(draw_counts.rim)
+	var use_stable_samples := drawn_settled_count <= STABLE_SURFACE_SAMPLE_LIMIT
+	if use_stable_samples and (field_changed or not _stable_surface_mode or _stable_sample_columns.size() != drawn_settled_count):
+		_update_stable_surface_samples(solver, drawn_settled_count, epoch)
+	elif not use_stable_samples and _stable_surface_mode:
+		_stable_surface_mode = false
+	_surface_multimesh.visible_instance_count = drawn_settled_count
+	_air_multimesh.visible_instance_count = drawn_air_count
+	_rim_multimesh.visible_instance_count = drawn_rim_count
+	var settled_density_scale := sqrt(float(_logical_settled_count) / float(maxi(drawn_settled_count, 1)))
+	var display_cap_world := MAX_DISPLAY_SCREEN_DIAMETER / maxf(zoom, 0.001)
+	# Each sample covers its share of the full population at every zoom.
+	var representation_scale := settled_density_scale if pressure_grain_mode else lerpf(settled_density_scale, 1.15, _dense_fill_blend)
+	# Once logical grains outnumber samples, expand the close-view cap by the
+	# same area-representation scale. Otherwise adding mass above the draw cap
+	# would make the compressed body paradoxically look more porous.
+	var surface_cap_scale := settled_density_scale if pressure_grain_mode else 1.0
+	var surface_display_cap_world := display_cap_world * surface_cap_scale
+	var settled_display_diameter := minf(grain_diameter * representation_scale, surface_display_cap_world)
+	# The molten presentation can distribute a local impact around a wider
+	# circular reservoir than the still-local authoritative field. Size the quad
+	# for both or the circle clips into flats at all four mesh edges.
+	var bulk_radius := maxf(maxf(float(solver.max_height), float(solver.compacted_radius)), molten_reservoir_radius * 1.015)
+	_bulk.scale = Vector2.ONE * bulk_radius * 2.0
+	_bulk_material.set_shader_parameter("outer_radius", bulk_radius)
+	_bulk_material.set_shader_parameter("compacted_radius", float(solver.compacted_radius))
+	_bulk_material.set_shader_parameter("molten_reservoir_radius", molten_reservoir_radius)
+	_bulk_material.set_shader_parameter("animation_inner_radius", float(solver.animation_inner_radius))
+	_bulk_material.set_shader_parameter("animation_outer_radius", float(solver.animation_outer_radius))
+	_bulk_material.set_shader_parameter("tint", grain_tint)
+	_bulk_material.set_shader_parameter("loose_packing", float(material_data.get("compaction_loose_packing", 0.72)))
+	_bulk_material.set_shader_parameter("max_packing", _maximum_stage_packing(material_data))
+	_bulk_material.set_shader_parameter("darkening", float(material_data.get("compaction_depth_darkening", 0.2)))
+	_bulk_material.set_shader_parameter("grain_diameter", grain_diameter)
+	_bulk_material.set_shader_parameter("loose_fill_blend", maxf(_dense_fill_blend, _visual_ignition))
+	_bulk_material.set_shader_parameter("pressure_grain_mode", pressure_grain_mode)
 	var surface_tint := grain_tint
 	if bool(sun_state.get("enabled", false)):
 		var warmth := _visual_heat * lerpf(0.08, 0.32, _visual_ignition)
@@ -164,8 +236,16 @@ func update_field(solver, center: Vector2, zoom: float) -> void:
 	_bulk_material.set_shader_parameter("stellar_spin", float(sun_state.get("spin", 0.0)))
 	_bulk_material.set_shader_parameter("view_zoom", zoom)
 	_bulk_material.set_shader_parameter("simulation_time", simulation_time)
+	_bulk_material.set_shader_parameter("core_motion_variant", core_motion_variant)
+	_bulk_material.set_shader_parameter("core_motion_speed", core_motion_speed)
 	_surface_material.set_shader_parameter("simulation_time", simulation_time)
 	_surface_material.set_shader_parameter("visual_epoch", epoch)
+	_surface_material.set_shader_parameter("stable_sample_mode", _stable_surface_mode)
+	var sampling_blend := smoothstep(float(STABLE_TO_DENSE_BEGIN), float(STABLE_SURFACE_SAMPLE_LIMIT), float(_logical_settled_count)) if _stable_surface_mode else 1.0
+	_surface_material.set_shader_parameter("sampling_blend", sampling_blend)
+	_surface_material.set_shader_parameter("dense_surface_blend", _dense_fill_blend)
+	_surface_material.set_shader_parameter("pressure_grain_mode", pressure_grain_mode)
+	_surface_material.set_shader_parameter("molten_surface_blend", _visual_ignition)
 	_surface_material.set_shader_parameter("distance_mode", distance_mode)
 	_surface_material.set_shader_parameter("core_radius", core_radius)
 	_surface_material.set_shader_parameter("grain_diameter", grain_diameter)
@@ -188,18 +268,24 @@ func update_field(solver, center: Vector2, zoom: float) -> void:
 	_air_material.set_shader_parameter("drawn_air_count", maxi(drawn_air_count, 1))
 	_air_material.set_shader_parameter("logical_air_count", _batch_grain_count)
 	_air_material.set_shader_parameter("grain_tint", grain_tint)
+	_air_material.set_shader_parameter("molten_surface_blend", _visual_ignition)
+	_air_material.set_shader_parameter("molten_reservoir_radius", molten_reservoir_radius)
 	_rim_material.set_shader_parameter("simulation_time", simulation_time)
 	_rim_material.set_shader_parameter("visual_epoch", epoch)
 	_rim_material.set_shader_parameter("distance_mode", distance_mode)
 	_rim_material.set_shader_parameter("grain_diameter", grain_diameter)
 	_rim_material.set_shader_parameter("display_diameter", maxf(grain_diameter, minf(grain_diameter * 1.35, display_cap_world)))
 	_rim_material.set_shader_parameter("grain_tint", surface_tint)
+	_rim_material.set_shader_parameter("molten_surface_blend", _visual_ignition)
+	_rim_material.set_shader_parameter("molten_reservoir_radius", molten_reservoir_radius)
 	_update_visual_effects(simulation_time)
 	for effect_material in [_impact_material, _patch_material]:
 		effect_material.set_shader_parameter("simulation_time", simulation_time)
 		effect_material.set_shader_parameter("grain_diameter", grain_diameter)
 		effect_material.set_shader_parameter("distance_mode", distance_mode)
 		effect_material.set_shader_parameter("grain_tint", surface_tint)
+		effect_material.set_shader_parameter("molten_surface_blend", _visual_ignition)
+		effect_material.set_shader_parameter("molten_reservoir_radius", molten_reservoir_radius)
 
 func get_draw_counts() -> Dictionary:
 	return {
@@ -212,7 +298,29 @@ func get_draw_counts() -> Dictionary:
 		"air_logical": _logical_air_count,
 		"rim_logical": _logical_rim_count,
 		"capacity": capacity,
+		"stable_surface": _stable_surface_mode,
+		"stable_surface_limit": STABLE_SURFACE_SAMPLE_LIMIT,
+		"dense_fill_blend": _dense_fill_blend,
+		"pressure_grain_mode": pressure_grain_mode,
+		"molten_surface_blend": _visual_ignition,
+		"molten_reservoir_radius": _molten_reservoir_radius,
+		"settled_detail_budget": _settled_detail_budget_last,
 	}
+
+func get_visual_outer_radius() -> float:
+	if _visual_ignition >= 0.995:
+		return maxf(_formed_outer_radius, _molten_reservoir_radius)
+	return lerpf(_formed_outer_radius, maxf(_formed_outer_radius, _molten_reservoir_radius), _visual_ignition)
+
+func _settled_detail_budget(solver, zoom: float, material_data: Dictionary) -> int:
+	var grain_diameter := maxf(float(solver.grain_size), 0.001)
+	var outer_radius := maxf(float(solver.max_height), float(solver.compacted_radius))
+	var edge_layers := maxf(float(material_data.get("dense_edge_layers", 3.0)), 1.0)
+	var detail_scale := maxf(float(material_data.get("dense_detail_scale", 1.0)), 0.1)
+	var projected_scale := clampf(grain_diameter * zoom, 0.35, 1.0)
+	var circumference_samples := TAU * outer_radius / grain_diameter
+	_settled_detail_budget_last = clampi(int(ceil(circumference_samples * edge_layers * detail_scale * projected_scale)), 720, STABLE_SURFACE_SAMPLE_LIMIT)
+	return _settled_detail_budget_last
 
 func _allocate_draw_counts(settled_count: int, air_count: int, rim_count: int) -> Dictionary:
 	# The landing handoff is reserved first, but exists only while a column is fresh.
@@ -243,12 +351,12 @@ func _build_surface_field() -> void:
 	_surface_texture = ImageTexture.create_from_image(_surface_image)
 
 func _build_air_batches() -> void:
-	_air_image = Image.create(MAX_BATCHES, 2, false, Image.FORMAT_RGBAF)
+	_air_image = Image.create(MAX_BATCHES, 3, false, Image.FORMAT_RGBAF)
 	_air_image.fill(Color(0.0, 0.0, 0.0, 0.0))
 	_air_texture = ImageTexture.create_from_image(_air_image)
 
 func _build_rim_slots() -> void:
-	_rim_image = Image.create(MAX_RIM_INSTANCES, 1, false, Image.FORMAT_RF)
+	_rim_image = Image.create(MAX_RIM_INSTANCES, 2, false, Image.FORMAT_RGBAF)
 	_rim_image.fill(Color(-1.0, 0.0, 0.0, 1.0))
 	_rim_texture = ImageTexture.create_from_image(_rim_image)
 
@@ -276,7 +384,7 @@ func _build_multimeshes() -> void:
 	_bulk.z_index = -1
 	add_child(_bulk)
 
-	_surface_multimesh = _make_multimesh(quad)
+	_surface_multimesh = _make_multimesh(quad, -1, true)
 	_air_multimesh = _make_multimesh(quad)
 	_rim_multimesh = _make_multimesh(quad, MAX_RIM_INSTANCES)
 	_impact_multimesh = _make_multimesh(quad, MAX_IMPACT_EVENTS)
@@ -343,25 +451,178 @@ func _build_multimeshes() -> void:
 	_impact_instances.z_index = 2
 	add_child(_impact_instances)
 
-func _make_multimesh(quad: QuadMesh, instance_capacity: int = -1) -> MultiMesh:
+func _make_multimesh(quad: QuadMesh, instance_capacity: int = -1, use_custom_data: bool = false) -> MultiMesh:
 	if instance_capacity < 0:
 		instance_capacity = capacity
 	var multimesh := MultiMesh.new()
 	multimesh.transform_format = MultiMesh.TRANSFORM_2D
+	multimesh.use_custom_data = use_custom_data
 	multimesh.mesh = quad
 	multimesh.instance_count = instance_capacity
 	multimesh.custom_aabb = AABB(Vector3(-1000000.0, -1000000.0, -1.0), Vector3(2000000.0, 2000000.0, 2.0))
-	multimesh.buffer = _make_identity_buffer(instance_capacity)
+	multimesh.buffer = _make_identity_buffer(instance_capacity, use_custom_data)
 	return multimesh
 
-func _make_identity_buffer(instance_count: int) -> PackedFloat32Array:
+func _make_identity_buffer(instance_count: int, use_custom_data: bool = false) -> PackedFloat32Array:
+	var stride := IDENTITY_FLOATS_PER_INSTANCE + (CUSTOM_FLOATS_PER_INSTANCE if use_custom_data else 0)
 	var buffer := PackedFloat32Array()
-	buffer.resize(instance_count * IDENTITY_FLOATS_PER_INSTANCE)
+	buffer.resize(instance_count * stride)
 	for index in instance_count:
-		var offset := index * IDENTITY_FLOATS_PER_INSTANCE
+		var offset := index * stride
 		buffer[offset] = 1.0
 		buffer[offset + 5] = 1.0
 	return buffer
+
+func _reset_stable_surface_samples() -> void:
+	_stable_sample_columns.resize(0)
+	_stable_sample_angle_fractions.resize(0)
+	_stable_sample_radial_fractions.resize(0)
+	_stable_surface_mode = false
+
+func _update_stable_surface_samples(solver, target_count: int, epoch: int) -> void:
+	target_count = clampi(target_count, 0, mini(STABLE_SURFACE_SAMPLE_LIMIT, capacity))
+	var old_size := _stable_sample_columns.size()
+	var shrunk := target_count < old_size
+	var desired := PackedInt32Array()
+	desired.resize(FIELD_COLUMNS)
+	var masses: PackedFloat64Array = solver.masses
+	var total_mass := 0.0
+	for column in FIELD_COLUMNS:
+		total_mass += maxf(float(masses[column]), 0.0)
+	# A thin fluid shell needs to show its low-density leading edge. Softening
+	# sample weights changes presentation only; authoritative volume remains the
+	# linear mass field. The curve fades out before the dense fallback.
+	var repose := maxf(float(solver.material.get("repose_slope", 0.0)), 0.0)
+	var landing_age := maxf(float(solver.time) - float(solver.last_landing_time), 0.0)
+	var travel_reveal := smoothstep(0.75, 7.5, landing_age)
+	var sparse_blend := (1.0 - smoothstep(2500.0, float(STABLE_SURFACE_SAMPLE_LIMIT), float(target_count))) * travel_reveal if repose <= 0.0 else 0.0
+	var distribution_power := lerpf(1.0, 0.42, sparse_blend)
+	var presentation_total := 0.0
+	for column in FIELD_COLUMNS:
+		presentation_total += pow(maxf(float(masses[column]), 0.0), distribution_power)
+	var remainders: Array[Dictionary] = []
+	var assigned := 0
+	if total_mass > 0.0 and presentation_total > 0.0 and target_count > 0:
+		for column in FIELD_COLUMNS:
+			var weight := pow(maxf(float(masses[column]), 0.0), distribution_power)
+			var exact := float(target_count) * weight / presentation_total
+			var whole := int(floor(exact))
+			desired[column] = whole
+			assigned += whole
+			remainders.append({"column": column, "fraction": exact - float(whole)})
+		remainders.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+			if not is_equal_approx(float(a.fraction), float(b.fraction)):
+				return float(a.fraction) > float(b.fraction)
+			return int(a.column) < int(b.column))
+		for remainder_index in target_count - assigned:
+			desired[int(remainders[remainder_index].column)] += 1
+	if target_count < old_size:
+		_shrink_stable_surface_samples(target_count, desired)
+		old_size = target_count
+	else:
+		_stable_sample_columns.resize(target_count)
+		_stable_sample_angle_fractions.resize(target_count)
+		_stable_sample_radial_fractions.resize(target_count)
+		for index in range(old_size, target_count):
+			_stable_sample_columns[index] = -1
+			_stable_sample_angle_fractions[index] = _stable_hash(index, 0x51f2)
+			_stable_sample_radial_fractions[index] = _stable_hash(index, 0x9e37)
+	var current := PackedInt32Array()
+	current.resize(FIELD_COLUMNS)
+	for index in target_count:
+		var column := _stable_sample_columns[index]
+		if column >= 0 and column < FIELD_COLUMNS:
+			current[column] += 1
+	var new_samples := PackedInt32Array()
+	var growing := target_count > old_size
+	var allow_existing_transfers := not growing and target_count > PINNED_SURFACE_SAMPLE_LIMIT
+	var donors: Array[Array] = []
+	donors.resize(FIELD_COLUMNS)
+	for column in FIELD_COLUMNS:
+		donors[column] = []
+	for index in range(target_count - 1, -1, -1):
+		var column := _stable_sample_columns[index]
+		if column < 0 or column >= FIELD_COLUMNS:
+			new_samples.append(index)
+		elif allow_existing_transfers and current[column] > desired[column]:
+			current[column] -= 1
+			donors[column].append(index)
+	var changed := PackedInt32Array()
+	for column in FIELD_COLUMNS:
+		while current[column] < desired[column]:
+			# New logical matter gets a new visual identity at its landing column.
+			# Existing grains are reserved for actual field flow, preventing an
+			# arrival from borrowing a remote grain and backfilling its old place.
+			var index := -1
+			if not new_samples.is_empty():
+				index = new_samples[new_samples.size() - 1]
+				new_samples.resize(new_samples.size() - 1)
+			elif allow_existing_transfers:
+				index = _take_nearest_stable_donor(donors, column)
+			if index < 0:
+				# Sparse settled identities stay pinned. Their visual distribution is
+				# deliberately allowed to lag the aggregate field until enough samples
+				# exist for rebalancing to read as continuous flow.
+				break
+			_stable_sample_columns[index] = column
+			current[column] += 1
+			changed.append(index)
+	if old_size == 0 or not _stable_surface_mode or shrunk:
+		changed.resize(target_count)
+		for index in target_count:
+			changed[index] = index
+	for index in changed:
+		var column := _stable_sample_columns[index]
+		_surface_multimesh.set_instance_custom_data(index, Color(
+			(float(column) + 0.5) / float(FIELD_COLUMNS),
+			_stable_sample_angle_fractions[index],
+			_stable_sample_radial_fractions[index],
+			float(epoch)))
+	_stable_surface_mode = true
+
+func _shrink_stable_surface_samples(target_count: int, desired: PackedInt32Array) -> void:
+	var kept_columns := PackedInt32Array()
+	var kept_angles := PackedFloat32Array()
+	var kept_radials := PackedFloat32Array()
+	var kept_per_column := PackedInt32Array()
+	kept_per_column.resize(FIELD_COLUMNS)
+	var deferred := PackedInt32Array()
+	for index in _stable_sample_columns.size():
+		var column := _stable_sample_columns[index]
+		if column >= 0 and column < FIELD_COLUMNS and kept_per_column[column] < desired[column]:
+			kept_columns.append(column)
+			kept_angles.append(_stable_sample_angle_fractions[index])
+			kept_radials.append(_stable_sample_radial_fractions[index])
+			kept_per_column[column] += 1
+		else:
+			deferred.append(index)
+	# Pinned sparse samples can intentionally lag the field. Fill any remaining
+	# slots evenly from the deferred identities instead of deleting one side.
+	var needed := target_count - kept_columns.size()
+	for pick in needed:
+		var deferred_at := mini(int(floor((float(pick) + 0.5) * float(deferred.size()) / float(needed))), deferred.size() - 1)
+		var index := deferred[deferred_at]
+		kept_columns.append(_stable_sample_columns[index])
+		kept_angles.append(_stable_sample_angle_fractions[index])
+		kept_radials.append(_stable_sample_radial_fractions[index])
+	_stable_sample_columns = kept_columns
+	_stable_sample_angle_fractions = kept_angles
+	_stable_sample_radial_fractions = kept_radials
+
+func _take_nearest_stable_donor(donors: Array[Array], target_column: int) -> int:
+	for distance in range(FIELD_COLUMNS / 2 + 1):
+		var clockwise := posmod(target_column + distance, FIELD_COLUMNS)
+		if not donors[clockwise].is_empty():
+			return donors[clockwise].pop_back()
+		if distance > 0:
+			var anticlockwise := posmod(target_column - distance, FIELD_COLUMNS)
+			if not donors[anticlockwise].is_empty():
+				return donors[anticlockwise].pop_back()
+	return -1
+
+func _stable_hash(index: int, salt: int) -> float:
+	var value := sin(float(index * 15731 + salt * 789221)) * 43758.5453123
+	return fposmod(value, 1.0)
 
 func _update_surface_texture(solver) -> void:
 	var masses: PackedFloat64Array = solver.masses
@@ -376,9 +637,8 @@ func _update_surface_texture(solver) -> void:
 		var column_mass := maxf(float(masses[column]), 0.0)
 		running_mass += column_mass
 		var cumulative := running_mass / total_mass if total_mass > 0.0 else 0.0
-		# A second CDF walks from column 719 back to zero. Alternating the search
-		# direction prevents a local mass change from remapping every visual sample
-		# clockwise. The two halves now respond in opposite directions.
+		# Retain the reverse cumulative channel for compatibility with saved
+		# diagnostics while the dense fallback uses the forward channel.
 		var reverse_cumulative := (total_mass - running_mass + column_mass) / total_mass if total_mass > 0.0 else 0.0
 		var surface_radius := maxf(float(heights[column]), core_radius)
 		var rim_activity_value = solver.get("rim_activity")
@@ -401,41 +661,29 @@ func _update_surface_texture(solver) -> void:
 	_surface_texture.update(_surface_image)
 
 func _update_rim_slots(solver, simulation_time: float) -> int:
-	# Slot contents only need refresh at a modest visual cadence.  The shader
-	# supplies smooth motion and fading from the timestamp in the field texture.
-	var latest_landing_value = solver.get("last_landing_time")
-	var latest_landing := float(latest_landing_value) if latest_landing_value != null else -1000.0
-	if latest_landing < simulation_time - RIM_LIFETIME:
-		if _logical_rim_count > 0:
-			_rim_image.fill(Color(-1.0, 0.0, 0.0, 1.0))
-			_rim_texture.update(_rim_image)
-		return 0
-	var rim_activity_value = solver.get("rim_activity")
-	var rim_activity: PackedFloat32Array = rim_activity_value if rim_activity_value != null else PackedFloat32Array()
-	if rim_activity.size() != FIELD_COLUMNS:
-		return 0
-	var loose_count := maxi(int(solver.settled_count) - int(solver.compacted_count), 0)
-	if loose_count <= 0:
-		return 0
-	if simulation_time >= _last_rim_slot_update and simulation_time - _last_rim_slot_update < 0.05 and _logical_rim_count > 0:
-		return _logical_rim_count
-	_last_rim_slot_update = simulation_time
+	# These are visual-only representatives. Their seed and local ID match the
+	# incoming batch, so contact motion does not regenerate random grains.
 	var slot := 0
-	# Three tiny visual grains per recently touched radial column creates a thin
-	# cap without pretending that each logical grain has its own simulation.
-	for column in FIELD_COLUMNS:
-		var age := simulation_time - float(rim_activity[column])
-		if age < -0.00001 or age > RIM_LIFETIME:
+	var events_value = solver.get("landing_events")
+	var events: Array = events_value if events_value != null else []
+	for event_value in events:
+		var event: Dictionary = event_value
+		var birth := float(event.get("birth", 0.0))
+		var duration := maxf(float(event.get("duration", RIM_LIFETIME)), 0.001)
+		if simulation_time < birth or simulation_time - birth >= duration:
 			continue
-		for copy in 3:
-			if slot >= MAX_RIM_INSTANCES or slot >= loose_count:
-				break
-			_rim_image.set_pixel(slot, 0, Color(float(column), 0.0, 0.0, 1.0))
+		var total := maxi(int(event.get("amount", 0)), 0)
+		var representatives := mini(total, MAX_RIM_INSTANCES - slot)
+		for sample in representatives:
+			var local_id := int(floor((float(sample) + 0.5) * float(total) / float(representatives)))
+			_rim_image.set_pixel(slot, 0, Color(float(event.angle), birth, duration, float(local_id)))
+			_rim_image.set_pixel(slot, 1, Color(float(event.seed), float(event.spread), float(total), 1.0))
 			slot += 1
-		if slot >= MAX_RIM_INSTANCES or slot >= loose_count:
+		if slot >= MAX_RIM_INSTANCES:
 			break
 	for clear_slot in range(slot, MAX_RIM_INSTANCES):
-		_rim_image.set_pixel(clear_slot, 0, Color(-1.0, 0.0, 0.0, 1.0))
+		_rim_image.set_pixel(clear_slot, 0, Color(0.0, -1000.0, 0.0, 0.0))
+		_rim_image.set_pixel(clear_slot, 1, Color(0.0, 0.0, 0.0, 0.0))
 	_rim_texture.update(_rim_image)
 	return slot
 
@@ -479,9 +727,11 @@ func _update_air_batches(solver) -> void:
 		var end_radius := float(batch.get("end_radius", float(solver.PLAYER_RADIUS)))
 		var spread := float(batch.get("spread", 0.24))
 		var seed := float(batch.get("seed", _air_batch_count + 1))
+		var landing_span := float(batch.get("landing_span", 0.0))
 		var cumulative_fraction := float(cumulative_count) / float(total_count)
 		_air_image.set_pixel(_air_batch_count, 0, Color(cumulative_fraction, angle, birth, duration))
 		_air_image.set_pixel(_air_batch_count, 1, Color(start_radius, end_radius, spread, seed))
+		_air_image.set_pixel(_air_batch_count, 2, Color(landing_span, 0.0, 0.0, 0.0))
 		_air_batch_count += 1
 	_air_texture.update(_air_image)
 	_batch_grain_count = total_count
@@ -489,6 +739,8 @@ func _update_air_batches(solver) -> void:
 func _capture_landing_effects(solver) -> void:
 	var now := float(solver.time)
 	var grain_diameter := float(solver.grain_size)
+	var sun_state: Dictionary = solver.call("get_sun_visual_state") if solver.has_method("get_sun_visual_state") else {}
+	var molten := bool(sun_state.get("ignited", false))
 	for batch_value in solver.batches:
 		var batch: Dictionary = batch_value
 		if int(batch.get("landed", 0)) <= 0:
@@ -501,9 +753,9 @@ func _capture_landing_effects(solver) -> void:
 			continue
 		var angle := _wrap_visual_angle(float(batch.get("angle", 0.0)))
 		var strength := clampf(log(float(total) + 1.0) / log(500001.0), 0.12, 1.0)
-		_add_impact_event(angle, now, strength, seed, grain_diameter)
+		_add_impact_event(angle, now, strength, seed, grain_diameter, molten)
 		if total >= PATCH_MIN_GRAINS:
-			_add_bonded_patch(angle, now, strength, seed, grain_diameter)
+			_add_bonded_patch(angle, now, strength, seed, grain_diameter, molten)
 
 func _visual_seed_is_active(seed: int) -> bool:
 	for event in _impact_events:
@@ -514,7 +766,7 @@ func _visual_seed_is_active(seed: int) -> bool:
 			return true
 	return false
 
-func _add_impact_event(angle: float, now: float, strength: float, seed: int, grain_diameter: float) -> void:
+func _add_impact_event(angle: float, now: float, strength: float, seed: int, grain_diameter: float, molten: bool = false) -> void:
 	for index in _impact_events.size():
 		var existing := _impact_events[index]
 		if now - float(existing.birth) <= 0.24 and absf(_wrapped_angle_delta(angle, float(existing.angle))) <= 0.10:
@@ -522,7 +774,8 @@ func _add_impact_event(angle: float, now: float, strength: float, seed: int, gra
 			existing.angle = _circular_mix(float(existing.angle), angle, strength / maxf(float(existing.strength) + strength, 0.001))
 			existing.strength = combined
 			existing.width = maxf(float(existing.width), grain_diameter * (10.0 + combined * 42.0))
-			existing.duration = maxf(float(existing.duration), 0.58 + combined * 0.54)
+			existing.duration = maxf(float(existing.duration), (1.15 + combined * 2.85) if molten else (0.58 + combined * 0.54))
+			existing.molten = maxf(float(existing.get("molten", 0.0)), 1.0 if molten else 0.0)
 			_impact_events[index] = existing
 			_upload_impact_events()
 			return
@@ -535,14 +788,15 @@ func _add_impact_event(angle: float, now: float, strength: float, seed: int, gra
 	_impact_events.append({
 		"angle": angle,
 		"birth": now,
-		"duration": 0.58 + strength * 0.54,
+		"duration": (1.15 + strength * 2.85) if molten else (0.58 + strength * 0.54),
 		"strength": strength,
 		"width": grain_diameter * (10.0 + strength * 42.0),
 		"seed": seed,
+		"molten": 1.0 if molten else 0.0,
 	})
 	_upload_impact_events()
 
-func _add_bonded_patch(angle: float, now: float, strength: float, seed: int, grain_diameter: float) -> void:
+func _add_bonded_patch(angle: float, now: float, strength: float, seed: int, grain_diameter: float, molten: bool = false) -> void:
 	for index in _bonded_patches.size():
 		var existing := _bonded_patches[index]
 		if now - float(existing.birth) <= 0.55 and absf(_wrapped_angle_delta(angle, float(existing.angle))) <= 0.14:
@@ -551,7 +805,8 @@ func _add_bonded_patch(angle: float, now: float, strength: float, seed: int, gra
 			existing.strength = combined
 			existing.width = minf(grain_diameter * 64.0, maxf(float(existing.width), grain_diameter * (9.0 + combined * 38.0)))
 			existing.height = minf(grain_diameter * 18.0, maxf(float(existing.height), grain_diameter * (2.0 + combined * 12.0)))
-			existing.duration = maxf(float(existing.duration), 0.8 + combined * 2.2)
+			existing.duration = maxf(float(existing.duration), (1.1 + combined * 2.8) if molten else (0.8 + combined * 2.2))
+			existing.molten = maxf(float(existing.get("molten", 0.0)), 1.0 if molten else 0.0)
 			_bonded_patches[index] = existing
 			_upload_bonded_patches()
 			return
@@ -567,11 +822,12 @@ func _add_bonded_patch(angle: float, now: float, strength: float, seed: int, gra
 	_bonded_patches.append({
 		"angle": angle,
 		"birth": now,
-		"duration": 0.8 + strength * 2.2,
+		"duration": (1.1 + strength * 2.8) if molten else (0.8 + strength * 2.2),
 		"strength": strength,
 		"width": grain_diameter * (9.0 + strength * 38.0),
 		"height": grain_diameter * (2.0 + strength * 12.0),
 		"seed": seed,
+		"molten": 1.0 if molten else 0.0,
 	})
 	_upload_bonded_patches()
 
@@ -590,7 +846,7 @@ func _upload_impact_events() -> void:
 	for index in _impact_events.size():
 		var event := _impact_events[index]
 		_impact_image.set_pixel(index, 0, Color(float(event.angle), float(event.birth), float(event.duration), float(event.strength)))
-		_impact_image.set_pixel(index, 1, Color(float(event.width), float(event.seed), 0.0, 1.0))
+		_impact_image.set_pixel(index, 1, Color(float(event.width), float(event.seed), float(event.get("molten", 0.0)), 1.0))
 	_impact_texture.update(_impact_image)
 	_impact_multimesh.visible_instance_count = _impact_events.size()
 
@@ -599,7 +855,7 @@ func _upload_bonded_patches() -> void:
 	for index in _bonded_patches.size():
 		var patch := _bonded_patches[index]
 		_patch_image.set_pixel(index, 0, Color(float(patch.angle), float(patch.birth), float(patch.duration), float(patch.strength)))
-		_patch_image.set_pixel(index, 1, Color(float(patch.width), float(patch.height), float(patch.seed), 1.0))
+		_patch_image.set_pixel(index, 1, Color(float(patch.width), float(patch.height), float(patch.seed), float(patch.get("molten", 0.0))))
 	_patch_texture.update(_patch_image)
 	_patch_multimesh.visible_instance_count = _bonded_patches.size()
 
@@ -617,7 +873,7 @@ func debug_fill_visual_effects(now: float, grain_diameter: float) -> void:
 		_impact_events.append({
 			"angle": float(index) * TAU / float(MAX_IMPACT_EVENTS), "birth": now,
 			"duration": 100.0, "strength": impact_strength,
-			"width": grain_diameter * (10.0 + impact_strength * 42.0), "seed": index + 1000,
+			"width": grain_diameter * (10.0 + impact_strength * 42.0), "seed": index + 1000, "molten": 0.0,
 		})
 	for index in MAX_BONDED_PATCHES:
 		var patch_strength := 0.50 + 0.50 * float(index % 7) / 6.0
@@ -625,7 +881,7 @@ func debug_fill_visual_effects(now: float, grain_diameter: float) -> void:
 			"angle": (float(index) + 0.5) * TAU / float(MAX_BONDED_PATCHES), "birth": now,
 			"duration": 100.0, "strength": patch_strength,
 			"width": grain_diameter * (9.0 + patch_strength * 38.0),
-			"height": grain_diameter * (2.0 + patch_strength * 12.0), "seed": index + 2000,
+			"height": grain_diameter * (2.0 + patch_strength * 12.0), "seed": index + 2000, "molten": 0.0,
 		})
 	_upload_impact_events()
 	_upload_bonded_patches()

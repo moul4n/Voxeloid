@@ -183,8 +183,9 @@ func _process(_delta: float) -> void:
 		_progression_clock = progression_tuning.metric_refresh_seconds()
 	grain_renderer.update_field(voxels, get_viewport_rect().size * 0.5 + camera_pan, zoom_level)
 	if space_backdrop.visible:
+		var visual_body_radius: float = float(grain_renderer.get_visual_outer_radius()) if voxels.compacted_count > 0 else 0.0
 		space_backdrop.update_view(get_viewport_rect().size, get_viewport_rect().size * 0.5 + camera_pan,
-			voxels.compacted_radius * zoom_level if voxels.compacted_count > 0 else 0.0, voxels.time, voxels.get_sun_visual_state())
+			visual_body_radius * zoom_level, voxels.time, voxels.get_sun_visual_state())
 	dust_renderer.update_view(ambient_dust, get_viewport_rect().size * 0.5 + camera_pan, zoom_level, get_viewport_rect().size)
 	dust_renderer.visible = developer_mode or _is_unlocked(&"indicator.ambient_capture")
 	queue_redraw()
@@ -447,6 +448,8 @@ func _objective_snapshot() -> Dictionary:
 		"objective_state": "Complete" if objective == null else "In progress",
 		"body_mass": body_mass,
 		"body_mass_display": clampf(log(1.0 + body_mass) / log(1000001.0), 0.0, 1.0),
+		"loose_reserve": maxi(voxels.settled_count - voxels.compacted_count, 0),
+		"loose_reserve_display": clampf(log(1.0 + float(maxi(voxels.settled_count - voxels.compacted_count, 0))) / log(1000001.0), 0.0, 1.0),
 		"visible_indicators": visible,
 	}
 	if _completion_hold_remaining > 0.0 and not _completed_objective_title.is_empty():

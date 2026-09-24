@@ -17,6 +17,8 @@ uniform int logical_air_count = 1;
 uniform vec4 grain_tint : source_color = vec4(0.50, 0.82, 1.0, 1.0);
 uniform int visual_epoch = 0;
 uniform float distance_mode = 0.0;
+uniform float molten_surface_blend = 0.0;
+uniform float molten_reservoir_radius = 42.0;
 
 varying float arrival_alpha;
 varying float visual_brightness;
@@ -58,6 +60,7 @@ void vertex() {
 	int batch_index = min(low, batch_limit - 1);
 	vec4 batch_a = texelFetch(batch_texture, ivec2(batch_index, 0), 0);
 	vec4 batch_b = texelFetch(batch_texture, ivec2(batch_index, 1), 0);
+	vec4 batch_c = texelFetch(batch_texture, ivec2(batch_index, 2), 0);
 	float previous_count = 0.0;
 	if (batch_index > 0) {
 		previous_count = texelFetch(batch_texture, ivec2(batch_index - 1, 0), 0).r;
@@ -80,9 +83,11 @@ void vertex() {
 	// Spread a burst along its flight instead of drawing a single thin arc.
 	float fall_power = mix(1.65, 2.35, random01(local_id ^ 8179u));
 	float radius = mix(batch_b.r, endpoint, pow(progress, fall_power));
-	float surface_radius = texelFetch(field_texture, ivec2(column, 0), 0).g;
+	float surface_radius = mix(texelFetch(field_texture, ivec2(column, 0), 0).g,
+		molten_reservoir_radius, molten_surface_blend);
 	float handoff_radius = surface_radius + grain_diameter * 0.35;
-	float final_fade = 1.0 - smoothstep(1.0 - min(max(impact_settle_seconds, 0.01) / duration, 0.35), 1.0, progress);
+	float handoff_fraction = clamp(max(batch_c.r, impact_settle_seconds) / duration, 0.01, 0.68);
+	float final_fade = 1.0 - smoothstep(1.0 - handoff_fraction, 1.0, progress);
 	float occluded = smoothstep(handoff_radius - grain_diameter * 0.35, handoff_radius + grain_diameter * 0.35, radius);
 	arrival_alpha = final_fade * occluded;
 	float speed_shape = sin(progress * PI);

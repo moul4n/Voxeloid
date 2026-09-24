@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource path="res://material_animation_compare.gd" type="Script" id="1"]
+
+[node name="MaterialAnimationCompare" type="Node2D"]
+script = ExtResource("1")
